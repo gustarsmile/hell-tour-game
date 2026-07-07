@@ -161,3 +161,14 @@ describe('序章專屬驗證', () => {
     expect([...axesUsed].sort()).toEqual([...AXES].sort());
   });
 });
+
+// ---------- 五殿專屬 ----------
+
+describe('五殿專屬驗證', () => {
+  it('hall5 有望鄉臺 postScene，且含 filial 抉擇', () => {
+    const hall5 = FILES['hall5.json'];
+    expect(hall5.postScene).toBeDefined();
+    const choiceNode = hall5.postScene.nodes.find((n) => n.type === 'choice');
+    expect(choiceNode.choices.some((c) => c.karma?.axis === 'filial')).toBe(true);
+  });
+});
