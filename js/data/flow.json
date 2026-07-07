@@ -3,6 +3,7 @@
     { "id": "prologue", "type": "scene", "src": "prologue.json" },
     { "id": "interlude", "type": "scene", "src": "interlude.json" },
     { "id": "hall1", "type": "trial", "src": "hall1.json" },
+    { "id": "hall2", "type": "visit", "src": "hall2.json" },
     { "id": "results", "type": "results" }
   ]
 }
