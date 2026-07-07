@@ -17,7 +17,7 @@ export function renderResults(state, onRestart, root) {
     list.appendChild(el('p', 'axis-row', `${AXIS_LABELS[a]}　${sign}`));
   });
   box.appendChild(list);
-  box.appendChild(el('p', 'text', '——垂直切片到此為止。二殿之後的旅程，敬請期待。'));
+  box.appendChild(el('p', 'text', '——十殿見習至此。孟婆亭、孽鏡反照與四象限結局，將於下一程開啟。'));
   const btn = el('button', 'btn btn-next', '重新開始');
   btn.addEventListener('click', onRestart);
   box.appendChild(btn);

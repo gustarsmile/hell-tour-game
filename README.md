@@ -11,13 +11,23 @@
 - 測試：`npm test`
 - 部署：整個資料夾為純靜態網站，上傳 GitHub Pages / Firebase Hosting 即可
 
-## 如何新增案例
+## 擴充內容（階段2起）
 
-1. 依 `js/data/hall1.json` 的格式新增 `js/data/hallN.json`
-   （testimony 謊言 1–2 句、mirror 三格、judgement 三選一、persuasion 10/5/0）
-2. 在 `tests/data.test.js` 加入該檔的驗證（照 hall1 區塊複製改名）
-3. 在 `js/main.js` 的 `screens` 中串接新畫面
-4. `npm test` 全綠即可
+流程由 `js/data/flow.json` 資料驅動。新增一殿：
+
+1. 新增 `js/data/hallN.json`
+   - 完整判案殿：`type: "full"`（five-step 案例格式，可選 `react` 反應段與 `postScene` 尾場景）
+   - 見聞殿：`type: "visit"`（`watch` 觀刑＋`quiz` 考題或 `mercy` 慈悲抉擇，可選 `branch` 支線）
+2. 在 `flow.json` 的對應位置插入一行 `{ "id": "hallN", "type": "trial"|"visit", "src": "hallN.json" }`
+3. `npx vitest run`——`tests/data.test.js` 自動驗證新 JSON 結構，`tests/flow.test.js` 的 autoplay 自動通關涵蓋新殿
+
+不需要改任何程式碼。
+
+### 資料慣例（測試守門）
+
+- 供詞謊言 1–2 句、孽鏡三格、勸化選項分數 10/5/0 且最佳句在第 0 位
+- 凡帶 karma 的選擇列表，第 0 個選項為最善（delta ≥ 0）
+- 因果卡 `source.chapter` 為原著回數（null 則 UI 不顯示出處），連結指向該回文字版
 
 ## 規格要點
 
