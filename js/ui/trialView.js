@@ -1,13 +1,11 @@
-import { el } from './render.js';
+import { el, NUM, hallLabel } from './render.js';
 import { lieIndexes } from '../engine/trial.js';
-
-const NUM = ['一', '二', '三'];
 
 export function renderTrialPhase(trial, handlers, root, message = '') {
   root.innerHTML = '';
   const c = trial.caseData;
   const box = el('div', 'scene-box trial-box');
-  box.appendChild(el('div', 'hall-title', `第${NUM[c.hall - 1] ?? c.hall}殿`));
+  box.appendChild(el('div', 'hall-title', hallLabel(c.hall)));
 
   if (trial.phase === 'testimony') {
     box.appendChild(el('div', 'speaker', `罪魂 ${c.soul.name}（${c.soul.title}）供詞`));
@@ -33,7 +31,10 @@ export function renderTrialPhase(trial, handlers, root, message = '') {
     const scroll = el('div', 'testimony');
     c.testimony.forEach((s, i) => {
       const line = el('button', 'testimony-line clickable', s.text);
-      if (trial.foundLies.has(i)) line.classList.add('found');
+      if (trial.foundLies.has(i)) {
+        line.classList.add('found');
+        line.disabled = true;
+      }
       line.addEventListener('click', () => handlers.onSpot(i));
       scroll.appendChild(line);
     });

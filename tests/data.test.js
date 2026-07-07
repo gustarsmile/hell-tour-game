@@ -34,6 +34,13 @@ describe('場景資料驗證', () => {
       .map((n) => n.choices.find((c) => c.karma)?.karma.axis);
     expect(new Set(axesUsed)).toEqual(new Set(AXES));
   });
+  it('序章四情境每軸恰好一題', () => {
+    const axesUsed = prologue.nodes
+      .filter((n) => n.type === 'choice')
+      .map((n) => n.choices.find((c) => c.karma)?.karma.axis);
+    expect(axesUsed.length).toBe(AXES.length);
+    expect([...axesUsed].sort()).toEqual([...AXES].sort());
+  });
 });
 
 describe('案例資料驗證', () => {

@@ -13,7 +13,8 @@ export function renderResults(state, onRestart, root) {
   const list = el('div', 'axis-list');
   AXES.forEach((a) => {
     const v = state.karma[a];
-    list.appendChild(el('p', 'axis-row', `${AXIS_LABELS[a]}　${v > 0 ? '＋' : ''}${v}`));
+    const sign = v > 0 ? `＋${v}` : v < 0 ? `－${-v}` : '0';
+    list.appendChild(el('p', 'axis-row', `${AXIS_LABELS[a]}　${sign}`));
   });
   box.appendChild(list);
   box.appendChild(el('p', 'text', '——垂直切片到此為止。二殿之後的旅程，敬請期待。'));

@@ -4,7 +4,9 @@ import { createTrial, nextPhase, spotLie, judge, persuade, trialScore } from './
 import { renderNode, el } from './ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from './ui/trialView.js';
 import { renderResults } from './ui/results.js';
+import { GAME_TITLE } from './config.js';
 
+document.title = GAME_TITLE;
 const root = document.getElementById('app');
 let state = createState();
 

@@ -1,8 +1,10 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi } from 'vitest';
-import { el, renderNode } from '../js/ui/render.js';
+import { el, renderNode, hallLabel } from '../js/ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from '../js/ui/trialView.js';
+import { renderResults } from '../js/ui/results.js';
 import { createTrial, nextPhase } from '../js/engine/trial.js';
+import { createState, recordKarma } from '../js/state.js';
 import hall1 from '../js/data/hall1.json';
 
 describe('render.js', () => {
@@ -57,5 +59,32 @@ describe('trialView.js', () => {
     const card = { ...hall1.karmaCard, source: { chapter: 12, url: 'https://example.com' } };
     renderKarmaCard(card, vi.fn(), root);
     expect(root.querySelector('.card-source').textContent).toContain('第12回');
+  });
+});
+
+describe('小修整（階段2 Task1）', () => {
+  it('hallLabel 支援一到十殿，超出以數字 fallback', () => {
+    expect(hallLabel(1)).toBe('第一殿');
+    expect(hallLabel(7)).toBe('第七殿');
+    expect(hallLabel(10)).toBe('第十殿');
+    expect(hallLabel(11)).toBe('第11殿');
+  });
+  it('spot 階段已找到的供詞行為 disabled', () => {
+    const root = document.createElement('div');
+    const trial = createTrial(hall1);
+    nextPhase(trial); nextPhase(trial); // → spot
+    trial.foundLies.add(1);
+    renderTrialPhase(trial, { onSpot: vi.fn() }, root);
+    const lines = root.querySelectorAll('.testimony-line');
+    expect(lines[1].disabled).toBe(true);
+    expect(lines[0].disabled).toBe(false);
+  });
+  it('結算負數軸顯示全形負號', () => {
+    const root = document.createElement('div');
+    const s = createState();
+    recordKarma(s, 'speech', -1);
+    renderResults(s, vi.fn(), root);
+    expect(root.textContent).toContain('口業　－1');
+    expect(root.textContent).not.toContain('-1');
   });
 });
