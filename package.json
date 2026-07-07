@@ -1,0 +1,9 @@
+{
+  "name": "hell-tour-game",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "python -m http.server 8000"
+  }
+}
