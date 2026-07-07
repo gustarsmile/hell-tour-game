@@ -5,5 +5,9 @@
   "scripts": {
     "test": "vitest run",
     "dev": "python -m http.server 8000"
+  },
+  "devDependencies": {
+    "happy-dom": "^15.11.3",
+    "vitest": "^4.1.10"
   }
 }
