@@ -1,3 +1,161 @@
-:root { color-scheme: dark; }
-body { margin: 0; background: #181512; color: #e8dcc0; font-family: "Noto Serif TC", serif; }
-#app { max-width: 480px; margin: 0 auto; padding: 16px; }
+/* 主題：莊嚴警世 · 廟宇彩繪
+   朱紅 --vermilion、石青 --azure、鎏金 --gold、墨黑 --ink */
+:root {
+  color-scheme: dark;
+  --ink: #17130f;
+  --ink-2: #241d16;
+  --vermilion: #9e2b25;
+  --vermilion-dim: #6f1f1b;
+  --gold: #c9a227;
+  --gold-dim: #8a7020;
+  --azure: #2f5d6b;
+  --paper: #efe3c8;
+  --paper-dim: #cbbc9c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at 50% -10%, #2c231a 0%, var(--ink) 60%);
+  color: var(--paper);
+  font-family: "Noto Serif TC", "PMingLiU", serif;
+  line-height: 1.9;
+  letter-spacing: 0.06em;
+}
+
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+/* 場景框：狀紙／卷軸 */
+.scene-box {
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--ink-2), #1d1710);
+  padding: 20px 18px;
+  box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.06), 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.speaker {
+  display: inline-block;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  padding: 1px 10px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+}
+
+.text { margin: 0 0 18px; white-space: pre-wrap; }
+
+.hall-title {
+  text-align: center;
+  color: var(--gold);
+  font-size: 1.25rem;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--vermilion-dim);
+  padding-bottom: 10px;
+}
+
+/* 按鈕 */
+.btn {
+  display: block;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  color: var(--paper);
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover, .btn:focus-visible { background: rgba(201, 162, 39, 0.1); border-color: var(--gold); }
+
+.btn-next {
+  text-align: center;
+  color: var(--gold);
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(158, 43, 37, 0.35), rgba(158, 43, 37, 0.15));
+}
+
+.choices { margin-top: 6px; }
+
+/* 供詞 */
+.testimony {
+  border-left: 3px solid var(--vermilion);
+  background: rgba(239, 227, 200, 0.04);
+  padding: 8px 12px;
+  margin-bottom: 14px;
+}
+.testimony-line {
+  display: block;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  color: var(--paper);
+  background: transparent;
+  border: none;
+  padding: 6px 4px;
+  margin: 0;
+}
+.testimony-line.clickable { cursor: pointer; border-bottom: 1px dashed var(--gold-dim); }
+.testimony-line.clickable:hover { color: var(--gold); }
+.testimony-line.found {
+  color: var(--vermilion);
+  text-decoration: line-through;
+  text-decoration-color: var(--vermilion);
+}
+
+.hint { color: var(--paper-dim); font-size: 0.9rem; margin: 0 0 12px; }
+.feedback { color: var(--gold); font-size: 0.95rem; margin-top: 12px; }
+
+/* 孽鏡三格 */
+.mirror-panels { display: grid; gap: 10px; margin: 12px 0 4px; }
+.mirror-panel {
+  border: 1px solid var(--azure);
+  border-radius: 4px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(47, 93, 107, 0.35), rgba(23, 19, 15, 0.2) 70%);
+  padding: 12px 14px;
+}
+.mirror-num { color: var(--azure); font-size: 0.8rem; letter-spacing: 0.3em; margin-bottom: 4px; filter: brightness(1.6); }
+.mirror-caption { margin: 0; font-size: 0.95rem; }
+
+/* 斷因果選項 */
+.opt-name { display: block; color: var(--gold); margin-bottom: 4px; }
+.opt-desc { display: block; font-size: 0.85rem; color: var(--paper-dim); }
+
+/* 因果卡 */
+.karma-card { border-color: var(--vermilion); text-align: center; }
+.card-title {
+  color: var(--vermilion);
+  font-size: 1.3rem;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  margin-bottom: 16px;
+  filter: brightness(1.35);
+}
+.card-row { margin: 6px 0; }
+.card-lesson { color: var(--gold); margin: 16px 0; font-size: 1.05rem; }
+.card-source { display: inline-block; color: var(--azure); filter: brightness(1.7); font-size: 0.85rem; margin-bottom: 8px; }
+
+/* 結算 */
+.results { text-align: center; }
+.wu-score { color: var(--gold); font-size: 1.5rem; margin: 12px 0 4px; }
+.verdict { margin: 4px 0 16px; }
+.axis-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; margin-bottom: 16px; }
+.axis-row { margin: 0; color: var(--paper-dim); }
+
+@media (min-width: 768px) {
+  #app { padding-top: 48px; }
+}
