@@ -5,6 +5,7 @@
     { "id": "hall1", "type": "trial", "src": "hall1.json" },
     { "id": "hall2", "type": "visit", "src": "hall2.json" },
     { "id": "hall3", "type": "trial", "src": "hall3.json" },
+    { "id": "hall4", "type": "visit", "src": "hall4.json" },
     { "id": "results", "type": "results" }
   ]
 }
