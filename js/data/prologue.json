@@ -1,0 +1,46 @@
+{
+  "id": "prologue",
+  "karmaWeight": 2,
+  "start": "intro1",
+  "nodes": [
+    { "id": "intro1", "type": "line", "speaker": "旁白",
+      "text": "這是再平凡不過的一天。天剛亮，市場的吆喝聲已此起彼落。", "next": "market" },
+    { "id": "market", "type": "choice", "speaker": "旁白",
+      "text": "你在早市買了一袋米。攤販忙中有錯，多找了你五十元。你發現時，已走出幾步……",
+      "choices": [
+        { "text": "轉身走回去，把錢退還給攤販", "karma": { "axis": "honesty", "delta": 1 }, "next": "office1" },
+        { "text": "金額不大，改天有經過再還吧", "karma": { "axis": "honesty", "delta": 0 }, "next": "office1" },
+        { "text": "收進口袋——是他自己找錯的", "karma": { "axis": "honesty", "delta": -1 }, "next": "office1" }
+      ] },
+    { "id": "office1", "type": "line", "speaker": "旁白",
+      "text": "上午進了公司，部門群組突然熱鬧了起來。", "next": "office" },
+    { "id": "office", "type": "choice", "speaker": "旁白",
+      "text": "群組裡瘋傳同事阿明「挪用公款被抓到」的消息，沒有人知道是真是假。訊息一則接著一則……",
+      "choices": [
+        { "text": "出聲提醒大家：事情還沒查清楚，先別亂傳", "karma": { "axis": "speech", "delta": 1 }, "next": "home1" },
+        { "text": "已讀不回，靜靜看著", "karma": { "axis": "speech", "delta": 0 }, "next": "home1" },
+        { "text": "順手轉傳，補一句「我早就覺得他有問題」", "karma": { "axis": "speech", "delta": -1 }, "next": "home1" }
+      ] },
+    { "id": "home1", "type": "line", "speaker": "旁白",
+      "text": "傍晚，你趕一份明早要交的報告，趕得焦頭爛額。手機響了——是媽媽。", "next": "home" },
+    { "id": "home", "type": "choice", "speaker": "旁白",
+      "text": "「喂，最近有沒有好好吃飯啊？天氣變冷了……」母親的聲音慢悠悠的，報告的游標還在閃。",
+      "choices": [
+        { "text": "耐著性子聽完，順口約好週末回家吃飯", "karma": { "axis": "filial", "delta": 1 }, "next": "night1" },
+        { "text": "匆匆說「媽，我在忙，晚點打給你」就掛斷", "karma": { "axis": "filial", "delta": 0 }, "next": "night1" },
+        { "text": "不耐煩地吼「你很煩欸，沒看我在忙嗎」", "karma": { "axis": "filial", "delta": -1 }, "next": "night1" }
+      ] },
+    { "id": "night1", "type": "line", "speaker": "旁白",
+      "text": "深夜加班完，你拖著疲憊的身子走回家。巷口昏黃的路燈下——有個人倒臥在地，一動也不動。", "next": "night" },
+    { "id": "night", "type": "choice", "speaker": "旁白",
+      "text": "四下無人。你停下腳步。",
+      "choices": [
+        { "text": "上前查看，撥打 119，留在原地等救護車", "karma": { "axis": "mercy", "delta": 1 }, "next": "outro" },
+        { "text": "站在遠處觀望，見有別人走近，才安心離開", "karma": { "axis": "mercy", "delta": 0 }, "next": "outro" },
+        { "text": "加快腳步繞路走開，當作沒看見", "karma": { "axis": "mercy", "delta": -1 }, "next": "outro" }
+      ] },
+    { "id": "outro", "type": "line", "speaker": "旁白",
+      "text": "夜深了。你梳洗過後倒頭就睡，渾然不覺——今晚，將是你此生最長的一夜。", "next": "fin" },
+    { "id": "fin", "type": "end" }
+  ]
+}
