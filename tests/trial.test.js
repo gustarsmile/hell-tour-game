@@ -61,6 +61,12 @@ describe('點破綻', () => {
     spotLie(trial, 1); spotLie(trial, 1);
     expect(trial.foundLies.size).toBe(1);
   });
+  it('步驟完成後再點擊不影響已得分數', () => {
+    spotLie(trial, 1); spotLie(trial, 2);
+    const r = spotLie(trial, 0);
+    expect(r).toEqual({ hit: true, allFound: true });
+    expect(trial.spotPoints).toBe(10);
+  });
 });
 
 describe('斷因果', () => {
@@ -71,6 +77,12 @@ describe('斷因果', () => {
   it('答錯後重答 0 分', () => {
     expect(judge(trial, 0).correct).toBe(false);
     expect(judge(trial, 1)).toEqual({ correct: true, points: 0 });
+  });
+  it('答對後再答錯不改變已得分數', () => {
+    judge(trial, 1);
+    const r = judge(trial, 0);
+    expect(r).toEqual({ correct: true, points: 10 });
+    expect(trial.judgePoints).toBe(10);
   });
 });
 
@@ -87,5 +99,15 @@ describe('勸化與總分', () => {
     nextPhase(trial);
     persuade(trial, 0);
     expect(trialScore(trial)).toBe(30);
+  });
+  it('勸化以第一次選擇為準，重複呼叫不改變結果', () => {
+    toPhase(trial, 'persuade');
+    persuade(trial, 0);
+    expect(persuade(trial, 2)).toEqual({ score: 10, reaction: '痛哭懺悔' });
+    expect(trial.persuadePoints).toBe(10);
+  });
+  it('勸化越界索引擲錯', () => {
+    toPhase(trial, 'persuade');
+    expect(() => persuade(trial, 9)).toThrow('勸化選項不存在');
   });
 });

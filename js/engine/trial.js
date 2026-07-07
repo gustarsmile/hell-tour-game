@@ -28,6 +28,7 @@ export function lieIndexes(caseData) {
 
 export function spotLie(trial, index) {
   if (trial.phase !== 'spot') throw new Error('目前不在點破綻階段');
+  if (trial.spotPoints !== null) return { hit: true, allFound: true };
   const lies = lieIndexes(trial.caseData);
   if (!lies.includes(index)) {
     trial.spotClean = false;
@@ -41,6 +42,7 @@ export function spotLie(trial, index) {
 
 export function judge(trial, index) {
   if (trial.phase !== 'judge') throw new Error('目前不在斷因果階段');
+  if (trial.judgePoints !== null) return { correct: true, points: trial.judgePoints };
   const correct = index === trial.caseData.judgement.answer;
   if (correct) {
     trial.judgePoints = trial.judgeAttempted ? 0 : 10;
@@ -52,7 +54,11 @@ export function judge(trial, index) {
 
 export function persuade(trial, index) {
   if (trial.phase !== 'persuade') throw new Error('目前不在勸化階段');
+  if (trial.persuadePoints !== null) {
+    return { score: trial.persuadePoints, reaction: trial.persuadeReaction };
+  }
   const opt = trial.caseData.persuasion.options[index];
+  if (!opt) throw new Error(`勸化選項不存在：${index}`);
   trial.persuadePoints = opt.score;
   trial.persuadeReaction = opt.reaction;
   return { score: opt.score, reaction: opt.reaction };
