@@ -88,3 +88,39 @@ describe('小修整（階段2 Task1）', () => {
     expect(root.textContent).not.toContain('-1');
   });
 });
+
+describe('trialView react 階段', () => {
+  const reactCase = {
+    ...hall1,
+    react: {
+      prompt: '罪魂哀求…',
+      choices: [
+        { text: '垂憐', karma: { axis: 'mercy', delta: 1 }, reply: '罪魂拭淚' },
+        { text: '冷漠', reply: '罪魂垂首' },
+      ],
+    },
+  };
+  it('未選擇時渲染 prompt 與選項，點擊以索引回呼', () => {
+    const root = document.createElement('div');
+    const trial = createTrial(reactCase);
+    trial.phase = 'react';
+    const onReact = vi.fn();
+    renderTrialPhase(trial, { onReact }, root);
+    expect(root.textContent).toContain('罪魂哀求…');
+    const btns = root.querySelectorAll('.btn-choice');
+    expect(btns.length).toBe(2);
+    btns[0].click();
+    expect(onReact).toHaveBeenCalledWith(0);
+  });
+  it('已選擇後顯示 reply 與繼續按鈕', () => {
+    const root = document.createElement('div');
+    const trial = createTrial(reactCase);
+    trial.phase = 'react';
+    trial.reactReply = '罪魂拭淚';
+    const onNextPhase = vi.fn();
+    renderTrialPhase(trial, { onNextPhase }, root);
+    expect(root.textContent).toContain('罪魂拭淚');
+    root.querySelector('.btn-next').click();
+    expect(onNextPhase).toHaveBeenCalled();
+  });
+});

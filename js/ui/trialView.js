@@ -54,6 +54,21 @@ export function renderTrialPhase(trial, handlers, root, message = '') {
     });
     box.appendChild(list);
     if (message) box.appendChild(el('p', 'feedback', message));
+  } else if (trial.phase === 'react') {
+    box.appendChild(el('div', 'speaker', '殿前'));
+    box.appendChild(el('p', 'text', c.react.prompt));
+    if (trial.reactReply == null) {
+      const list = el('div', 'choices');
+      c.react.choices.forEach((o, i) => {
+        const btn = el('button', 'btn btn-choice', o.text);
+        btn.addEventListener('click', () => handlers.onReact(i));
+        list.appendChild(btn);
+      });
+      box.appendChild(list);
+    } else {
+      box.appendChild(el('p', 'text', trial.reactReply));
+      appendNext(box, '繼續 ▸', handlers.onNextPhase);
+    }
   } else if (trial.phase === 'persuade') {
     box.appendChild(el('div', 'speaker', '勸化'));
     box.appendChild(el('p', 'text', c.persuasion.prompt));

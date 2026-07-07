@@ -1,22 +1,27 @@
-const PHASES = ['testimony', 'mirror', 'spot', 'judge', 'persuade', 'done'];
+function buildPhases(caseData) {
+  return ['testimony', 'mirror', 'spot', 'judge', ...(caseData.react ? ['react'] : []), 'persuade', 'done'];
+}
 
-export function createTrial(caseData) {
+export function createTrial(caseData, hooks = {}) {
   return {
     caseData,
+    hooks,
+    phases: buildPhases(caseData),
     phase: 'testimony',
     foundLies: new Set(),
     spotClean: true,
     spotPoints: null,
     judgeAttempted: false,
     judgePoints: null,
+    reactReply: null,
     persuadePoints: null,
     persuadeReaction: null,
   };
 }
 
 export function nextPhase(trial) {
-  const i = PHASES.indexOf(trial.phase);
-  trial.phase = PHASES[Math.min(i + 1, PHASES.length - 1)];
+  const i = trial.phases.indexOf(trial.phase);
+  trial.phase = trial.phases[Math.min(i + 1, trial.phases.length - 1)];
   return trial.phase;
 }
 
@@ -52,6 +57,18 @@ export function judge(trial, index) {
   return { correct, points: 0 };
 }
 
+export function react(trial, index) {
+  if (trial.phase !== 'react') throw new Error('目前不在反應階段');
+  if (trial.reactReply !== null) return { reply: trial.reactReply };
+  const opt = trial.caseData.react.choices[index];
+  if (!opt) throw new Error(`反應選項不存在：${index}`);
+  if (opt.karma && trial.hooks.onKarma) {
+    trial.hooks.onKarma(opt.karma.axis, opt.karma.delta, 1);
+  }
+  trial.reactReply = opt.reply;
+  return { reply: opt.reply };
+}
+
 export function persuade(trial, index) {
   if (trial.phase !== 'persuade') throw new Error('目前不在勸化階段');
   if (trial.persuadePoints !== null) {
@@ -59,6 +76,9 @@ export function persuade(trial, index) {
   }
   const opt = trial.caseData.persuasion.options[index];
   if (!opt) throw new Error(`勸化選項不存在：${index}`);
+  if (opt.karma && trial.hooks.onKarma) {
+    trial.hooks.onKarma(opt.karma.axis, opt.karma.delta, 1);
+  }
   trial.persuadePoints = opt.score;
   trial.persuadeReaction = opt.reaction;
   return { score: opt.score, reaction: opt.reaction };

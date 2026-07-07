@@ -1,6 +1,6 @@
 import { createState, recordKarma, addWu, save, load, clearSave } from './state.js';
 import { createPlayer } from './engine/scene.js';
-import { createTrial, nextPhase, spotLie, judge, persuade, trialScore } from './engine/trial.js';
+import { createTrial, nextPhase, spotLie, judge, react, persuade, trialScore } from './engine/trial.js';
 import { renderNode, el } from './ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from './ui/trialView.js';
 import { renderResults } from './ui/results.js';
@@ -43,7 +43,9 @@ function runIntroLines(lines, onEnd) {
 }
 
 function runTrial(caseData, onEnd) {
-  const trial = createTrial(caseData);
+  const trial = createTrial(caseData, {
+    onKarma: (axis, delta, weight) => recordKarma(state, axis, delta, weight),
+  });
   let message = '';
   const handlers = {
     onNextPhase: () => { message = ''; nextPhase(trial); step(); },
@@ -60,6 +62,7 @@ function runTrial(caseData, onEnd) {
       else { message = ''; nextPhase(trial); }
       step();
     },
+    onReact: (i) => { react(trial, i); step(); },
     onPersuade: (i) => { persuade(trial, i); nextPhase(trial); step(); },
     onFinish: () => { addWu(state, trialScore(trial)); onEnd(); },
   };
