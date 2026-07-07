@@ -10,6 +10,7 @@
     { "id": "hall6", "type": "visit", "src": "hall6.json" },
     { "id": "hall7", "type": "trial", "src": "hall7.json" },
     { "id": "hall8", "type": "visit", "src": "hall8.json" },
+    { "id": "hall9", "type": "visit", "src": "hall9.json" },
     { "id": "results", "type": "results" }
   ]
 }
