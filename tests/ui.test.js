@@ -3,7 +3,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { el, renderNode, hallLabel } from '../js/ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from '../js/ui/trialView.js';
 import { renderResults } from '../js/ui/results.js';
+import { renderVisitPhase } from '../js/ui/visitView.js';
 import { createTrial, nextPhase } from '../js/engine/trial.js';
+import { createVisit, nextVisitPhase } from '../js/engine/visit.js';
 import { createState, recordKarma } from '../js/state.js';
 import hall1 from '../js/data/hall1.json';
 
@@ -122,5 +124,95 @@ describe('trialView react 階段', () => {
     expect(root.textContent).toContain('罪魂拭淚');
     root.querySelector('.btn-next').click();
     expect(onNextPhase).toHaveBeenCalled();
+  });
+});
+
+const base = {
+  id: 'v-demo', hall: 2, type: 'visit', king: '楚江王',
+  intro: [{ speaker: '旁白', text: 'x' }],
+  watch: { title: '某獄', panels: [{ caption: '其一' }] },
+  closing: '走吧。',
+  karmaCard: { sin: 's', result: 'r', lesson: 'l', source: { chapter: null, url: 'https://x' } },
+};
+const quizVisit = { ...base, quiz: { question: 'Q', options: ['甲', '乙', '丙'], answer: 1, hint: 'H', reveal: 'R' } };
+const mercyVisit = {
+  ...base,
+  mercy: {
+    prompt: 'P',
+    choices: [
+      { text: '善', karma: { axis: 'mercy', delta: 1 }, reply: 'r1' },
+      { text: '中', reply: 'r2' },
+      { text: '惡', karma: { axis: 'mercy', delta: -1 }, reply: 'r3' },
+    ],
+  },
+};
+const branchVisit = {
+  ...base,
+  branch: {
+    prompt: 'B?', acceptText: '去', declineText: '不去', declineLine: 'D', rewardWu: 10,
+    scene: { id: 'b', start: 'n1', nodes: [{ id: 'n1', type: 'line', text: 'x', next: 'fin' }, { id: 'fin', type: 'end' }] },
+  },
+};
+
+describe('visitView', () => {
+  it('watch 階段渲染殿名、獄名與觀刑格', () => {
+    const root = document.createElement('div');
+    const v = createVisit(quizVisit);
+    renderVisitPhase(v, { onNextPhase: vi.fn() }, root);
+    expect(root.textContent).toContain('第二殿');
+    expect(root.textContent).toContain('某獄');
+    expect(root.querySelectorAll('.watch-panel').length).toBe(1);
+  });
+  it('quiz 未答時渲染選項並以索引回呼；答對後顯示 reveal 與繼續鈕', () => {
+    const root = document.createElement('div');
+    const v = createVisit(quizVisit);
+    nextVisitPhase(v);
+    const onQuiz = vi.fn();
+    renderVisitPhase(v, { onQuiz }, root);
+    const btns = root.querySelectorAll('.btn-choice');
+    expect(btns.length).toBe(3);
+    btns[2].click();
+    expect(onQuiz).toHaveBeenCalledWith(2);
+    v.quizPoints = 5;
+    const onNextPhase = vi.fn();
+    renderVisitPhase(v, { onNextPhase }, root);
+    expect(root.textContent).toContain('R');
+    root.querySelector('.btn-next').click();
+    expect(onNextPhase).toHaveBeenCalled();
+  });
+  it('mercy 已選後顯示 reply 與繼續鈕', () => {
+    const root = document.createElement('div');
+    const v = createVisit(mercyVisit);
+    nextVisitPhase(v);
+    v.mercyReply = 'r1';
+    renderVisitPhase(v, { onNextPhase: vi.fn() }, root);
+    expect(root.textContent).toContain('r1');
+    expect(root.querySelector('.btn-next')).not.toBeNull();
+  });
+  it('branch 未決時渲染接受／婉拒鈕；婉拒後顯示 declineLine', () => {
+    const root = document.createElement('div');
+    const v = createVisit(branchVisit);
+    nextVisitPhase(v);
+    const onBranchAccept = vi.fn();
+    const onBranchDecline = vi.fn();
+    renderVisitPhase(v, { onBranchAccept, onBranchDecline }, root);
+    root.querySelector('.btn-accept').click();
+    expect(onBranchAccept).toHaveBeenCalled();
+    root.querySelector('.btn-decline').click();
+    expect(onBranchDecline).toHaveBeenCalled();
+    v.branchTaken = false;
+    renderVisitPhase(v, { onNextPhase: vi.fn() }, root);
+    expect(root.textContent).toContain('D');
+    expect(root.querySelector('.btn-next')).not.toBeNull();
+  });
+  it('closing 階段顯示結語與收下因果卡鈕', () => {
+    const root = document.createElement('div');
+    const v = createVisit(quizVisit);
+    v.phase = 'closing';
+    const onFinish = vi.fn();
+    renderVisitPhase(v, { onFinish }, root);
+    expect(root.textContent).toContain('走吧。');
+    root.querySelector('.btn-next').click();
+    expect(onFinish).toHaveBeenCalled();
   });
 });

@@ -159,3 +159,17 @@ body {
 @media (min-width: 768px) {
   #app { padding-top: 48px; }
 }
+
+/* ===== 見聞殿（階段2） ===== */
+.visit-box .hall-title { letter-spacing: 0.15em; }
+.watch-panels { margin: 12px 0; }
+.watch-panel {
+  border: 1px solid #5a1f1f;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  background: radial-gradient(ellipse at 50% 30%, #331111 0%, #16090a 75%);
+  box-shadow: inset 0 0 24px rgba(160, 30, 20, 0.25);
+}
+.watch-caption { margin: 0; color: #d9b8a0; line-height: 1.7; }
+.btn-decline { opacity: 0.85; }
