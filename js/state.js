@@ -46,15 +46,40 @@ export function deserialize(json) {
   };
 }
 
-export function save(state, storage = globalThis.localStorage) {
-  storage.setItem(SAVE_KEY, serialize(state));
+function safeStorage(storage) {
+  if (storage !== undefined) return storage;
+  try {
+    return globalThis.localStorage;
+  } catch {
+    return null;
+  }
 }
 
-export function load(storage = globalThis.localStorage) {
-  const json = storage.getItem(SAVE_KEY);
-  return json ? deserialize(json) : null;
+export function save(state, storage) {
+  try {
+    const s = safeStorage(storage);
+    if (s) s.setItem(SAVE_KEY, serialize(state));
+  } catch {
+    /* 存檔失敗不影響遊玩 */
+  }
 }
 
-export function clearSave(storage = globalThis.localStorage) {
-  storage.removeItem(SAVE_KEY);
+export function load(storage) {
+  try {
+    const s = safeStorage(storage);
+    const json = s ? s.getItem(SAVE_KEY) : null;
+    return json ? deserialize(json) : null;
+  } catch {
+    clearSave(storage);
+    return null;
+  }
+}
+
+export function clearSave(storage) {
+  try {
+    const s = safeStorage(storage);
+    if (s) s.removeItem(SAVE_KEY);
+  } catch {
+    /* 忽略 */
+  }
 }

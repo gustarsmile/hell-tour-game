@@ -83,4 +83,20 @@ describe('存讀檔', () => {
     clearSave(st);
     expect(load(st)).toBeNull();
   });
+  it('load 讀到損壞 JSON 回 null 並清除存檔', () => {
+    const st = fakeStorage();
+    st.setItem('hellTourSave.v1', '{oops');
+    expect(load(st)).toBeNull();
+    expect(st.getItem('hellTourSave.v1')).toBeNull();
+  });
+  it('storage 擲錯時 save/load/clearSave 不擲錯', () => {
+    const boom = {
+      setItem() { throw new Error('quota'); },
+      getItem() { throw new Error('denied'); },
+      removeItem() { throw new Error('denied'); },
+    };
+    expect(() => save(createState(), boom)).not.toThrow();
+    expect(load(boom)).toBeNull();
+    expect(() => clearSave(boom)).not.toThrow();
+  });
 });
