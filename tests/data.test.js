@@ -172,3 +172,14 @@ describe('五殿專屬驗證', () => {
     expect(choiceNode.choices.some((c) => c.karma?.axis === 'filial')).toBe(true);
   });
 });
+
+// ---------- 六殿專屬 ----------
+
+describe('六殿專屬驗證', () => {
+  it('hall6 為支線型：有 branch、rewardWu 為 10、無考題與慈悲抉擇', () => {
+    const hall6 = FILES['hall6.json'];
+    expect(hall6.branch.rewardWu).toBe(10);
+    expect(hall6.quiz).toBeUndefined();
+    expect(hall6.mercy).toBeUndefined();
+  });
+});

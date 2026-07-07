@@ -123,3 +123,29 @@ describe('全流程整合（flow manifest）', () => {
     expect(root.textContent).toContain(FILES['js/data/prologue.json'].nodes[0].text);
   });
 });
+
+describe('枉死城支線功德', () => {
+  const miniFlow = {
+    screens: [
+      { id: 'hall6', type: 'visit', src: 'hall6.json' },
+      { id: 'results', type: 'results' },
+    ],
+  };
+  const miniLoad = async (p) =>
+    p === 'js/data/flow.json' ? structuredClone(miniFlow) : loadJSON(p);
+
+  it('接受並完成支線 → 隱藏功德 +10', async () => {
+    const storage = fakeStorage();
+    const root = document.createElement('div');
+    await startGame({ root, loadJSON: miniLoad, storage });
+    autoplay(root, storage, { acceptBranch: true });
+    expect(root.textContent).toContain('悟性值 10');
+  });
+  it('婉拒支線 → 0 分', async () => {
+    const storage = fakeStorage();
+    const root = document.createElement('div');
+    await startGame({ root, loadJSON: miniLoad, storage });
+    autoplay(root, storage, { acceptBranch: false });
+    expect(root.textContent).toContain('悟性值 0');
+  });
+});
