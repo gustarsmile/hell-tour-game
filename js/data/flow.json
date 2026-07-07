@@ -4,6 +4,7 @@
     { "id": "interlude", "type": "scene", "src": "interlude.json" },
     { "id": "hall1", "type": "trial", "src": "hall1.json" },
     { "id": "hall2", "type": "visit", "src": "hall2.json" },
+    { "id": "hall3", "type": "trial", "src": "hall3.json" },
     { "id": "results", "type": "results" }
   ]
 }
