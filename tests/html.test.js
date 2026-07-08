@@ -11,4 +11,9 @@ describe('index.html 頁首', () => {
     expect(html).toMatch(/name="description"/);
     expect(html).toMatch(/name="theme-color" content="#17130f"/);
   });
+  it('og 標籤指向 GAME_URL', async () => {
+    const { GAME_URL } = await import('../js/config.js');
+    expect(html).toContain(`property="og:url" content="${GAME_URL}"`);
+    expect(html).toContain(`content="${GAME_URL}assets/og.png"`);
+  });
 });

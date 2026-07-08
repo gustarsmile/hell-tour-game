@@ -13,6 +13,29 @@
 - 測試：`npx vitest run`
 - 部署：整個資料夾為純靜態網站，上傳 GitHub Pages / Firebase Hosting 即可
 
+## 部署（GitHub Pages）
+
+正式網址：`https://gustarsmile.github.io/hell-tour-game/`（`js/config.js` 的 `GAME_URL`）。
+
+1. GitHub repo（帳號 `gustarsmile`）啟用 Settings → Pages，來源選根目錄（本專案無建置步驟，純靜態檔案直接發佈）。
+2. Push 到預設分支後，GitHub Pages 會自動部署上述網址。
+
+### 改網址三步驟
+
+若日後更換部署網址（例如換帳號、換自訂網域），依序：
+
+1. 改 `js/config.js` 的 `GAME_URL`
+2. 重跑 `npm run gen-qr`（重產 `assets/qr.png`）
+3. 跑 `npx vitest run tests/qr.test.js` 守門——`assets/qr.png` 解碼結果必須恆等於 `GAME_URL`，測試綠燈才算改完
+
+### 現場 QR 列印
+
+`assets/qr.png` 是可直接列印的成品圖（420×420，米黃底／墨色碼），廟方可直接取用列印張貼，不需另外產生。
+
+### 社群分享（og 標籤）
+
+`index.html` 內建 Open Graph 標籤（`og:title`／`og:description`／`og:url`／`og:image`），連結貼到 LINE／Facebook 等社群通訊軟體時會顯示標題、簡介與 `assets/og.png` 封面圖。網址變更時記得同步更新 `og:url`／`og:image` 兩個標籤（`tests/html.test.js` 會守門其內容須與 `GAME_URL` 一致）。
+
 ## 擴充內容（階段2起）
 
 流程由 `js/data/flow.json` 資料驅動。新增一殿：
