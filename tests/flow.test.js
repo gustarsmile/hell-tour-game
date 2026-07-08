@@ -32,19 +32,20 @@ function resourceOf(screenId) {
 }
 
 // 由資料推導完美通關的期望悟性值：判案殿 30、考題殿 5、支線 rewardWu
-function expectedWu({ acceptBranch }) {
+// evil 模式：判案殿勸化選最末（0 分），故判案殿每殿 20（spot 10 + judge 10）
+function expectedWu({ acceptBranch, evil = false }) {
   let wu = 0;
   for (const scr of flowData.screens) {
     const data = resourceOf(scr.id);
     if (!data) continue;
-    if (scr.type === 'trial') wu += 30;
+    if (scr.type === 'trial') wu += evil ? 20 : 30;
     if (scr.type === 'visit' && data.quiz) wu += 5;
     if (scr.type === 'visit' && data.branch && acceptBranch) wu += data.branch.rewardWu;
   }
   return Math.min(100, wu);
 }
 
-function autoplay(root, storage, { acceptBranch = true } = {}) {
+function autoplay(root, storage, { acceptBranch = true, evil = false } = {}) {
   for (let i = 0; i < 2000; i++) {
     if (root.querySelector('.finale-end')) return;
     const saved = load(storage);
@@ -71,6 +72,7 @@ function autoplay(root, storage, { acceptBranch = true } = {}) {
       let idx = 0;
       if (root.querySelector('.opt-name')) idx = data.judgement.answer;
       else if (root.querySelector('.visit-box') && data.quiz) idx = data.quiz.answer;
+      else if (evil) idx = choices.length - 1; // 道德選擇全選最惡（末選項慣例）
       choices[idx].click();
       continue;
     }
@@ -160,6 +162,21 @@ describe('全流程整合（flow manifest）', () => {
     expect([...loadBooklet(storage)].sort()).toEqual([...cardScreens].sort());
     [...root.querySelectorAll('button')].find((b) => b.textContent === '重新開始').click();
     expect([...loadBooklet(storage)].sort()).toEqual([...cardScreens].sort());
+  });
+
+  it('惡向通關：悟性仍高、心性惡 → 知易行難結局，並引用序章惡選', async () => {
+    const storage = fakeStorage();
+    const root = document.createElement('div');
+    await startGame({ root, loadJSON, storage });
+    autoplay(root, storage, { acceptBranch: true, evil: true });
+    expect(root.textContent).toContain(`悟性值 ${expectedWu({ acceptBranch: true, evil: true })}`);
+    expect(root.textContent).toContain('滿腹經綸·知易行難');
+    const s = load(storage);
+    const pro = s.choices.filter((c) => c.scene === 'prologue');
+    expect(pro.length).toBe(4);
+    for (const c of pro) expect(c.delta).toBe(-1);
+    // 惡向孟婆亭選最末＝喝下
+    // 稱號已斷言 highBad；序章惡選存在 → endingQuote 於 ending 階段引用（單元已測）
   });
 });
 

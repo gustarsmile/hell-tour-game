@@ -26,6 +26,10 @@ function validateScene(scene) {
       expect(node.choices.length).toBeGreaterThanOrEqual(2);
       // autoplay 慣例：choices[0] 必為最善（無 karma 或 delta ≥ 0）
       if (node.choices[0].karma) expect(node.choices[0].karma.delta).toBeGreaterThanOrEqual(0);
+      // autoplay 慣例：凡帶 karma 的選擇列表，最末選項必為最惡（delta ≤ 0）
+      if (node.choices.some((c) => c.karma)) {
+        expect(node.choices.at(-1).karma?.delta ?? 0).toBeLessThanOrEqual(0);
+      }
       for (const c of node.choices) {
         expect(ids.has(c.next)).toBe(true);
         if (c.karma) expectKarma(c.karma);
@@ -56,6 +60,7 @@ function validateReactionChoices(choices) {
   expect(deltas).toContain(1);   // 至少一善
   expect(deltas).toContain(-1);  // 至少一惡
   expect(deltas[0]).toBeGreaterThanOrEqual(0); // choices[0] 最善慣例
+  expect(deltas.at(-1)).toBeLessThanOrEqual(0); // 最末選項最惡慣例
 }
 
 function validateFullCase(c) {
