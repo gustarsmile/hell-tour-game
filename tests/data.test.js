@@ -39,14 +39,14 @@ function validateScene(scene) {
   expect(scene.nodes.some((n) => n.type === 'end')).toBe(true);
 }
 
+const SOURCE_BASE = 'https://www.taolibrary.com/category/category48/c48002b';
 function validateKarmaCard(card) {
   for (const key of ['sin', 'result', 'lesson', 'source']) expect(card[key]).toBeTruthy();
-  expect(card.source.url).toMatch(/^https?:\/\//);
-  if (card.source.chapter !== null) {
-    expect(Number.isInteger(card.source.chapter)).toBe(true);
-    expect(card.source.chapter).toBeGreaterThanOrEqual(1);
-    expect(card.source.chapter).toBeLessThanOrEqual(65);
-  }
+  expect(Number.isInteger(card.source.chapter)).toBe(true); // 不再允許 null
+  expect(card.source.chapter).toBeGreaterThanOrEqual(1);
+  expect(card.source.chapter).toBeLessThanOrEqual(65);
+  // 網址與回數強一致（網頁編號＝回數＋2）
+  expect(card.source.url).toBe(`${SOURCE_BASE}/${card.source.chapter + 2}.htm`);
 }
 
 function validateReactionChoices(choices) {
@@ -245,5 +245,8 @@ describe('十殿專屬驗證', () => {
     expect(e.highBad.title).toBe('滿腹經綸·知易行難');
     expect(e.lowGood.title).toBe('不識一字·菩薩心腸');
     expect(e.lowBad.title).toBe('執迷不悟·輪迴重修');
+  });
+  it('hall10 結算出處連結與起始回一致（第55回=/57.htm）', () => {
+    expect(FILES['hall10.json'].source.url).toBe('https://www.taolibrary.com/category/category48/c48002b/57.htm');
   });
 });

@@ -55,9 +55,10 @@ describe('trialView.js', () => {
   });
   it('因果卡：chapter 為 null 時不顯示出處列', () => {
     const root = document.createElement('div');
-    renderKarmaCard(hall1.karmaCard, vi.fn(), root);
+    const card = { ...hall1.karmaCard, source: { chapter: null, url: 'https://example.com' } };
+    renderKarmaCard(card, vi.fn(), root);
     expect(root.querySelector('.card-source')).toBeNull();
-    expect(root.textContent).toContain(hall1.karmaCard.lesson);
+    expect(root.textContent).toContain(card.lesson);
   });
   it('因果卡：有 chapter 時顯示出處連結', () => {
     const root = document.createElement('div');
