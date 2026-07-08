@@ -25,6 +25,16 @@ export function createPlayer(scene, hooks = {}) {
       if (choice.karma && hooks.onKarma) {
         hooks.onKarma(choice.karma.axis, choice.karma.delta, weight);
       }
+      if (choice.karma && hooks.onChoice) {
+        hooks.onChoice({
+          scene: scene.id,
+          label: current.label ?? null,
+          text: choice.text,
+          axis: choice.karma.axis,
+          delta: choice.karma.delta,
+          weight,
+        });
+      }
       current = nodeOf(choice.next);
       return current;
     },

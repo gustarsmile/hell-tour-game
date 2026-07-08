@@ -65,6 +65,12 @@ export function react(trial, index) {
   if (opt.karma && trial.hooks.onKarma) {
     trial.hooks.onKarma(opt.karma.axis, opt.karma.delta, 1);
   }
+  if (opt.karma && trial.hooks.onChoice) {
+    trial.hooks.onChoice({
+      scene: trial.caseData.id, label: null, text: opt.text,
+      axis: opt.karma.axis, delta: opt.karma.delta, weight: 1,
+    });
+  }
   trial.reactReply = opt.reply;
   return { reply: opt.reply };
 }
@@ -78,6 +84,12 @@ export function persuade(trial, index) {
   if (!opt) throw new Error(`勸化選項不存在：${index}`);
   if (opt.karma && trial.hooks.onKarma) {
     trial.hooks.onKarma(opt.karma.axis, opt.karma.delta, 1);
+  }
+  if (opt.karma && trial.hooks.onChoice) {
+    trial.hooks.onChoice({
+      scene: trial.caseData.id, label: null, text: opt.text,
+      axis: opt.karma.axis, delta: opt.karma.delta, weight: 1,
+    });
   }
   trial.persuadePoints = opt.score;
   trial.persuadeReaction = opt.reaction;

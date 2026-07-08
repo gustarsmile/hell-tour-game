@@ -161,6 +161,11 @@ describe('序章專屬驗證', () => {
     expect(axesUsed.length).toBe(AXES.length);
     expect([...axesUsed].sort()).toEqual([...AXES].sort());
   });
+  it('四個抉擇節點皆有 label（孽鏡反照情境標籤）', () => {
+    const nodes = prologue.nodes.filter((n) => n.type === 'choice');
+    expect(nodes.length).toBe(4);
+    for (const n of nodes) expect(n.label.length).toBeGreaterThan(0);
+  });
 });
 
 // ---------- 五殿專屬 ----------

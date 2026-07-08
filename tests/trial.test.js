@@ -180,3 +180,39 @@ describe('react 階段與 karma hook', () => {
     expect(onKarma).toHaveBeenCalledWith('speech', 1, 1);
   });
 });
+
+describe('trial onChoice 紀錄（階段3）', () => {
+  const hall1 = caseData;
+  const reactCase = {
+    ...hall1,
+    react: {
+      prompt: 'p',
+      choices: [
+        { text: '垂憐', karma: { axis: 'mercy', delta: 1 }, reply: 'r1' },
+        { text: '譏笑', karma: { axis: 'mercy', delta: -1 }, reply: 'r2' },
+      ],
+    },
+  };
+  it('react 帶 karma 選項觸發 onChoice', () => {
+    const onChoice = vi.fn();
+    const trial = createTrial(reactCase, { onChoice });
+    trial.phase = 'react';
+    react(trial, 1);
+    expect(onChoice).toHaveBeenCalledWith({
+      scene: reactCase.id, label: null, text: '譏笑', axis: 'mercy', delta: -1, weight: 1,
+    });
+  });
+  it('persuade 帶 karma 選項觸發 onChoice、無 karma 不觸發', () => {
+    const withKarma = structuredClone(hall1);
+    withKarma.persuasion.options[0].karma = { axis: 'mercy', delta: 1 };
+    const onChoice = vi.fn();
+    const t1 = createTrial(withKarma, { onChoice });
+    t1.phase = 'persuade';
+    persuade(t1, 0);
+    expect(onChoice).toHaveBeenCalledTimes(1);
+    const t2 = createTrial(structuredClone(hall1), { onChoice: vi.fn() });
+    t2.phase = 'persuade';
+    persuade(t2, 0);
+    expect(t2.hooks.onChoice).not.toHaveBeenCalled();
+  });
+});

@@ -47,6 +47,12 @@ export function chooseMercy(visit, index) {
   if (opt.karma && visit.hooks.onKarma) {
     visit.hooks.onKarma(opt.karma.axis, opt.karma.delta, 1);
   }
+  if (opt.karma && visit.hooks.onChoice) {
+    visit.hooks.onChoice({
+      scene: visit.data.id, label: null, text: opt.text,
+      axis: opt.karma.axis, delta: opt.karma.delta, weight: 1,
+    });
+  }
   visit.mercyReply = opt.reply;
   return { reply: opt.reply };
 }

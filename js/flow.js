@@ -1,5 +1,5 @@
 import { GAME_TITLE } from './config.js';
-import { createState, recordKarma, addWu, save, load, clearSave } from './state.js';
+import { createState, recordKarma, recordChoice, addWu, save, load, clearSave } from './state.js';
 import { createPlayer } from './engine/scene.js';
 import { createTrial, nextPhase, spotLie, judge, react, persuade, trialScore } from './engine/trial.js';
 import { createVisit, nextVisitPhase, answerQuiz, chooseMercy, takeBranch, visitScore } from './engine/visit.js';
@@ -42,9 +42,10 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
 
   let state = createState();
   const onKarma = (axis, delta, weight) => recordKarma(state, axis, delta, weight);
+  const onChoice = (rec) => recordChoice(state, rec);
 
   function runScene(sceneData, onEnd) {
-    const player = createPlayer(sceneData, { onKarma });
+    const player = createPlayer(sceneData, { onKarma, onChoice });
     const step = () => {
       const node = player.current();
       if (node.type === 'end') { onEnd(); return; }
@@ -57,7 +58,7 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
   }
 
   function runTrial(caseData, onEnd) {
-    const trial = createTrial(caseData, { onKarma });
+    const trial = createTrial(caseData, { onKarma, onChoice });
     let message = '';
     const step = () => renderTrialPhase(trial, handlers, root, message);
     const handlers = {
@@ -87,7 +88,7 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
   }
 
   function runVisit(data, onEnd) {
-    const visit = createVisit(data, { onKarma });
+    const visit = createVisit(data, { onKarma, onChoice });
     let message = '';
     const step = () => renderVisitPhase(visit, handlers, root, message);
     const handlers = {

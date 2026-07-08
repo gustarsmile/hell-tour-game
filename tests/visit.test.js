@@ -100,3 +100,27 @@ describe('takeBranch 與 visitScore', () => {
     expect(visitScore(createVisit(mercyVisit))).toBe(0);
   });
 });
+
+describe('visit onChoice 紀錄（階段3）', () => {
+  it('mercy 帶 karma 選項觸發 onChoice', () => {
+    const data = {
+      id: 'v-demo', hall: 4,
+      watch: { title: 't', panels: [{ caption: 'c' }] },
+      mercy: {
+        prompt: 'P',
+        choices: [
+          { text: '善', karma: { axis: 'mercy', delta: 1 }, reply: 'r1' },
+          { text: '惡', karma: { axis: 'mercy', delta: -1 }, reply: 'r3' },
+        ],
+      },
+      closing: 'x',
+    };
+    const onChoice = vi.fn();
+    const v = createVisit(data, { onChoice });
+    nextVisitPhase(v); // → ask
+    chooseMercy(v, 0);
+    expect(onChoice).toHaveBeenCalledWith({
+      scene: 'v-demo', label: null, text: '善', axis: 'mercy', delta: 1, weight: 1,
+    });
+  });
+});

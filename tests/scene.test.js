@@ -61,3 +61,35 @@ describe('scene player', () => {
     expect(() => p.advance()).toThrow();
   });
 });
+
+describe('onChoice 紀錄（階段3）', () => {
+  const scene = {
+    id: 'sc', karmaWeight: 2, start: 'c1',
+    nodes: [
+      {
+        id: 'c1', type: 'choice', label: '試題', text: '選？',
+        choices: [
+          { text: '善行', karma: { axis: 'mercy', delta: 1 }, next: 'fin' },
+          { text: '無關', next: 'fin' },
+        ],
+      },
+      { id: 'fin', type: 'end' },
+    ],
+  };
+  it('帶 karma 的選擇觸發 onChoice，record 齊備', () => {
+    const onChoice = vi.fn();
+    createPlayer(scene, { onChoice }).choose(0);
+    expect(onChoice).toHaveBeenCalledWith({
+      scene: 'sc', label: '試題', text: '善行', axis: 'mercy', delta: 1, weight: 2,
+    });
+  });
+  it('無 karma 的選擇不觸發 onChoice；節點無 label 時傳 null', () => {
+    const onChoice = vi.fn();
+    createPlayer(scene, { onChoice }).choose(1);
+    expect(onChoice).not.toHaveBeenCalled();
+    const noLabel = structuredClone(scene);
+    delete noLabel.nodes[0].label;
+    createPlayer(noLabel, { onChoice }).choose(0);
+    expect(onChoice).toHaveBeenCalledWith(expect.objectContaining({ label: null }));
+  });
+});

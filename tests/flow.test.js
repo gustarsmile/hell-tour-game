@@ -79,6 +79,20 @@ function autoplay(root, storage, { acceptBranch = true } = {}) {
 }
 
 describe('全流程整合（flow manifest）', () => {
+  it('通關後存檔含序章四筆選擇紀錄（label、權重×2）', async () => {
+    const storage = fakeStorage();
+    const root = document.createElement('div');
+    await startGame({ root, loadJSON, storage });
+    autoplay(root, storage, { acceptBranch: true });
+    const pro = load(storage).choices.filter((c) => c.scene === 'prologue');
+    expect(pro.length).toBe(4);
+    for (const c of pro) {
+      expect(c.weight).toBe(2);
+      expect(c.delta).toBe(1); // autoplay 全選最善
+      expect(c.label.length).toBeGreaterThan(0);
+    }
+  });
+
   it('完美通關（接受支線）：走到結算，悟性值與心性正確，重新開始可回序章', async () => {
     const storage = fakeStorage();
     const root = document.createElement('div');
