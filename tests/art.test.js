@@ -28,4 +28,7 @@ describe('美術資產', () => {
   it('og 預覽圖存在', () => {
     expect(existsSync('assets/og.png')).toBe(true);
   });
+  it('og 預覽圖體積在 500KB 內', () => {
+    expect(statSync('assets/og.png').size).toBeLessThan(500 * 1024);
+  });
 });

@@ -22,11 +22,38 @@ export function wrapText(text, maxChars) {
   return lines.length ? lines : [''];
 }
 
+// 依 CARD_W/CARD_H 比例，從來源圖置中裁切等比覆蓋（cover），避免長寬比不同時被拉伸變形
+function drawCoverImage(ctx, img) {
+  const iw = img.width;
+  const ih = img.height;
+  if (!iw || !ih) {
+    ctx.drawImage(img, 0, 0, CARD_W, CARD_H); // 尺寸未知時退回滿版鋪滿
+    return;
+  }
+  const srcRatio = iw / ih;
+  const dstRatio = CARD_W / CARD_H;
+  let sx, sy, sw, sh;
+  if (srcRatio > dstRatio) {
+    // 來源較寬：以高度為準，左右裁切
+    sh = ih;
+    sw = ih * dstRatio;
+    sx = (iw - sw) / 2;
+    sy = 0;
+  } else {
+    // 來源較窄／較高：以寬度為準，上下裁切
+    sw = iw;
+    sh = iw / dstRatio;
+    sx = 0;
+    sy = (ih - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, CARD_W, CARD_H);
+}
+
 export function drawShareCard(ctx, { title, wu, motto }, qrImg, bgImg = null) {
   ctx.fillStyle = C.ink;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
   if (bgImg) {
-    ctx.drawImage(bgImg, 0, 0, CARD_W, CARD_H);
+    drawCoverImage(ctx, bgImg);
     ctx.fillStyle = 'rgba(23, 19, 15, 0.45)'; // 壓暗保文字可讀
     ctx.fillRect(0, 0, CARD_W, CARD_H);
   } else {
@@ -86,20 +113,19 @@ export function buildShareCard(doc, payload, qrImg, bgImg = null) {
   return canvas;
 }
 
-export function loadQrImage(doc) {
+function loadImage(doc, src) {
   return new Promise((resolve) => {
     const img = doc.createElement('img');
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
-    img.src = 'assets/qr.png';
+    img.src = src;
   });
 }
 
+export function loadQrImage(doc) {
+  return loadImage(doc, 'assets/qr.png');
+}
+
 export function loadArtImage(doc, file) {
-  return new Promise((resolve) => {
-    const img = doc.createElement('img');
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = `assets/art/${file}`;
-  });
+  return loadImage(doc, `assets/art/${file}`);
 }

@@ -43,6 +43,7 @@
 1. 新增 `js/data/hallN.json`
    - 完整判案殿：`type: "full"`（five-step 案例格式，可選 `react` 反應段與 `postScene` 尾場景）
    - 見聞殿：`type: "visit"`（`watch` 觀刑＋`quiz` 考題或 `mercy` 慈悲抉擇，可選 `branch` 支線）
+   - 並在 JSON 附上 `art` 欄位（對應 `assets/art/` 內的 webp，見 `tests/data.test.js` 守門）
 2. 在 `flow.json` 的對應位置插入一行 `{ "id": "hallN", "type": "trial"|"visit", "src": "hallN.json" }`
 3. `npx vitest run`——`tests/data.test.js` 自動驗證新 JSON 結構，`tests/flow.test.js` 的 autoplay 自動通關涵蓋新殿
 

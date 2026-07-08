@@ -63,14 +63,18 @@ describe('drawShareCard', () => {
     expect(CARD_W).toBe(1080);
     expect(CARD_H).toBe(1440);
   });
-  it('有底圖時先畫滿版底圖再壓暗色罩', () => {
+  it('有底圖時先畫滿版底圖再壓暗色罩（等比裁切覆蓋，不拉伸變形）', () => {
     const ctx = fakeCtx();
-    const bg = {};
+    const bg = { width: 683, height: 1024 }; // share-bg.webp 實際尺寸，長寬比與畫布不同
     drawShareCard(ctx, payload, null, bg);
     const drawImageCalls = ctx.calls.filter(([n]) => n === 'drawImage');
-    expect(drawImageCalls[0]).toEqual(['drawImage', bg, 0, 0, CARD_W, CARD_H]);
+    // 9 參數裁切繪製：來源裁切矩形依比例計算，目的地矩形固定滿版 0,0,CARD_W,CARD_H
+    const bgCall = drawImageCalls[0];
+    expect(bgCall[0]).toBe('drawImage');
+    expect(bgCall[1]).toBe(bg);
+    expect(bgCall.slice(-4)).toEqual([0, 0, CARD_W, CARD_H]);
     // 壓暗色罩緊接在底圖之後：找到底圖呼叫的 index，其後應有 rgba 暗色 fillStyle + 滿版 fillRect
-    const bgIdx = ctx.calls.indexOf(drawImageCalls[0]);
+    const bgIdx = ctx.calls.indexOf(bgCall);
     const after = ctx.calls.slice(bgIdx + 1);
     const overlayStyleIdx = after.findIndex(([n, v]) => n === 'fillStyle' && v === 'rgba(23, 19, 15, 0.45)');
     expect(overlayStyleIdx).toBeGreaterThanOrEqual(0);
