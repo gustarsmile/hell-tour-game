@@ -36,5 +36,5 @@
 - 存檔：
   - `hellTourSave.v2`：進行中旅程（localStorage，畫面粒度），重新開始即清除
   - `hellTourBooklet.v1`：善書冊紀錄（localStorage），跨輪保留
-- 四象限結局表（悟性 ≥ 70 × 心性善惡）：`highGood`（大覺大悟·代天宣化）、`highBad`（滿腹經綸·知易行難）、`lowGood`（善心未滿·慮不周密）、`lowBad`（譎詐多端·終難逃脫）
+- 四象限結局表（悟性 ≥ 70 × 心性善惡）：`highGood`（大覺大悟·代天宣化）、`highBad`（滿腹經綸·知易行難）、`lowGood`（不識一字·菩薩心腸）、`lowBad`（執迷不悟·輪迴重修）
 - QR 碼生成：`npm run gen-qr`——部署網址（`js/config.js` 的 `GAME_URL`）變更時重新產生 `assets/qr.png`
