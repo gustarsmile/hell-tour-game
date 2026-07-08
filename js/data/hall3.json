@@ -1,6 +1,7 @@
 {
   "id": "hall3-tongue",
   "hall": 3,
+  "king": "宋帝王",
   "type": "full",
   "axis": "speech",
   "soul": { "name": "林陳氏", "title": "村婦" },

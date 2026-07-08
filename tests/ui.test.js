@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi } from 'vitest';
-import { el, renderNode, hallLabel } from '../js/ui/render.js';
+import { el, renderNode, hallLabel, renderError } from '../js/ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from '../js/ui/trialView.js';
 import { renderResults } from '../js/ui/results.js';
 import { renderVisitPhase } from '../js/ui/visitView.js';
@@ -88,6 +88,45 @@ describe('小修整（階段2 Task1）', () => {
     renderResults(s, vi.fn(), root);
     expect(root.textContent).toContain('口業　－1');
     expect(root.textContent).not.toContain('-1');
+  });
+});
+
+describe('小修整（階段3 Task1）', () => {
+  it('判案殿標題含殿主名', () => {
+    const root = document.createElement('div');
+    const trial = createTrial(hall1);
+    renderTrialPhase(trial, { onNextPhase: vi.fn() }, root);
+    expect(root.querySelector('.hall-title').textContent).toBe('第一殿・秦廣王');
+  });
+  it('spot 階段傳入訊息時顯示 feedback', () => {
+    const root = document.createElement('div');
+    const trial = createTrial(hall1);
+    nextPhase(trial); nextPhase(trial); // → spot
+    renderTrialPhase(trial, { onSpot: vi.fn() }, root, '這句倒是實話。');
+    expect(root.querySelector('.feedback').textContent).toBe('這句倒是實話。');
+  });
+  it('judge 階段傳入訊息時顯示 feedback', () => {
+    const root = document.createElement('div');
+    const trial = createTrial(hall1);
+    trial.phase = 'judge';
+    renderTrialPhase(trial, { onJudge: vi.fn() }, root, '再看看各獄所懲之罪。');
+    expect(root.querySelector('.feedback').textContent).toBe('再看看各獄所懲之罪。');
+  });
+  it('見聞殿考題答錯訊息顯示 feedback', () => {
+    const root = document.createElement('div');
+    const v = createVisit(quizVisit);
+    nextVisitPhase(v);
+    renderVisitPhase(v, { onQuiz: vi.fn() }, root, 'H');
+    expect(root.querySelector('.feedback').textContent).toBe('H');
+  });
+  it('renderError 顯示錯誤與重新開始鈕', () => {
+    const root = document.createElement('div');
+    const onRetry = vi.fn();
+    renderError(new Error('boom'), onRetry, root);
+    expect(root.textContent).toContain('劇情資料載入失敗');
+    expect(root.textContent).toContain('boom');
+    [...root.querySelectorAll('button')].find((b) => b.textContent === '重新開始').click();
+    expect(onRetry).toHaveBeenCalled();
   });
 });
 

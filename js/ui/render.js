@@ -31,3 +31,15 @@ export const NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九
 export function hallLabel(hall) {
   return `第${NUM[hall - 1] ?? hall}殿`;
 }
+
+export function renderError(err, onRetry, root) {
+  root.innerHTML = '';
+  const box = el('div', 'scene-box');
+  box.appendChild(el('div', 'speaker', '系統'));
+  box.appendChild(el('p', 'text', '劇情資料載入失敗。請透過網頁伺服器開啟本遊戲（不要直接雙擊 index.html），或重新整理再試一次。'));
+  box.appendChild(el('p', 'hint', String(err)));
+  const btn = el('button', 'btn btn-next', '重新開始');
+  btn.addEventListener('click', onRetry);
+  box.appendChild(btn);
+  root.appendChild(box);
+}

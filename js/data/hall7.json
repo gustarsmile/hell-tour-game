@@ -1,6 +1,7 @@
 {
   "id": "hall7-mercy",
   "hall": 7,
+  "king": "泰山王",
   "type": "full",
   "axis": "mercy",
   "soul": { "name": "錢有田", "title": "米糧行東家" },

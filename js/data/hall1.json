@@ -1,6 +1,7 @@
 {
   "id": "hall1-merchant",
   "hall": 1,
+  "king": "秦廣王",
   "type": "full",
   "axis": "honesty",
   "soul": { "name": "王阿福", "title": "米行老闆" },

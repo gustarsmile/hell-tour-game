@@ -59,6 +59,7 @@ function validateReactionChoices(choices) {
 }
 
 function validateFullCase(c) {
+  expect(c.king.length).toBeGreaterThan(0);
   expect(AXES).toContain(c.axis);
   expect(c.intro.length).toBeGreaterThanOrEqual(1);
   const lies = c.testimony.filter((s) => s.lie);

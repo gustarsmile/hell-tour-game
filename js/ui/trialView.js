@@ -5,7 +5,7 @@ export function renderTrialPhase(trial, handlers, root, message = '') {
   root.innerHTML = '';
   const c = trial.caseData;
   const box = el('div', 'scene-box trial-box');
-  box.appendChild(el('div', 'hall-title', hallLabel(c.hall)));
+  box.appendChild(el('div', 'hall-title', `${hallLabel(c.hall)}・${c.king}`));
 
   if (trial.phase === 'testimony') {
     box.appendChild(el('div', 'speaker', `罪魂 ${c.soul.name}（${c.soul.title}）供詞`));

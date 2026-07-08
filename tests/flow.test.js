@@ -112,6 +112,18 @@ describe('全流程整合（flow manifest）', () => {
     expect(root.textContent).toContain(FILES['js/data/hall1.json'].intro[0].text);
   });
 
+  it('續玩提示點「重新開始」→ 回序章且存檔清空', async () => {
+    const storage = fakeStorage();
+    const s = createState();
+    s.progress.screen = 'hall3';
+    save(s, storage);
+    const root = document.createElement('div');
+    await startGame({ root, loadJSON, storage });
+    [...root.querySelectorAll('button')].find((b) => b.textContent === '重新開始').click();
+    expect(root.textContent).toContain(FILES['js/data/prologue.json'].nodes[0].text);
+    expect(load(storage).progress.screen).toBe('prologue');
+  });
+
   it('存檔畫面 id 不在流程清單（舊版存檔）→ 從頭開始', async () => {
     const storage = fakeStorage();
     const s = createState();

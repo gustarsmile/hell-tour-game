@@ -1,6 +1,7 @@
 {
   "id": "hall5-filial",
   "hall": 5,
+  "king": "閻羅王",
   "type": "full",
   "axis": "filial",
   "soul": { "name": "陳阿貴", "title": "商行老闆" },
