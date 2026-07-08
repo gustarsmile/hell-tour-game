@@ -1,14 +1,14 @@
 # 幽冥之旅：地獄遊記
 
-依《地獄遊記》善書改編的教育類網頁遊戲。此為階段 2 十殿全通版：
-序章「陽間一日」→ 十殿見習（四完整判案殿＋五見聞殿＋枉死城支線＋望鄉臺）→ 簡易結算。
+依《地獄遊記》善書改編的教育類網頁遊戲。此為完整一輪遊（v0.3）：
+序章「陽間一日」四抉擇 → 十殿見習（四完整判案殿＋五見聞殿＋枉死城支線＋望鄉臺） → 第十殿結算關（孟婆亭、悟性公布、孽鏡反照、四象限結局、還陽善書使命） → 善書冊與稱號分享卡。
 
 設計文件：`g:\我的雲端硬碟\AI Cloud Database\Game\地獄遊記遊戲設計文件.md`
 
 ## 執行
 
 - 開發預覽：`npm run dev` → http://localhost:8000
-- 測試：`npm test`
+- 測試：`npx vitest run`
 - 部署：整個資料夾為純靜態網站，上傳 GitHub Pages / Firebase Hosting 即可
 
 ## 擴充內容（階段2起）
@@ -33,4 +33,8 @@
 
 - 悟性值上限 100；答錯經提示重答不得分
 - 心性四軸 honesty/speech/filial/mercy；序章權重 ×2；總和 ≥0 判善
-- 存檔 key `hellTourSave.v1`（localStorage，畫面粒度）
+- 存檔：
+  - `hellTourSave.v2`：進行中旅程（localStorage，畫面粒度），重新開始即清除
+  - `hellTourBooklet.v1`：善書冊紀錄（localStorage），跨輪保留
+- 四象限結局表（悟性 ≥ 70 × 心性善惡）：`highGood`（大覺大悟·代天宣化）、`highBad`（滿腹經綸·知易行難）、`lowGood`（善心未滿·慮不周密）、`lowBad`（譎詐多端·終難逃脫）
+- QR 碼生成：`npm run gen-qr`——部署網址（`js/config.js` 的 `GAME_URL`）變更時重新產生 `assets/qr.png`
