@@ -111,6 +111,10 @@ describe('選擇紀錄（階段3）', () => {
     expect(s.choices[0].weight).toBe(2);
     expect(s.choices[1]).toEqual({ scene: 'hall4', label: null, text: '別過頭去', axis: 'mercy', delta: -1, weight: 1 });
   });
+  it('recordChoice 拒絕未知心性軸', () => {
+    const s = createState();
+    expect(() => recordChoice(s, { scene: 'x', text: 't', axis: 'luck', delta: 1 })).toThrow(/未知的心性軸/);
+  });
   it('serialize/deserialize 保留 choices；舊格式無 choices 補空陣列；損壞型別補空陣列', () => {
     const s = createState();
     recordChoice(s, { scene: 'prologue', text: 'x', axis: 'mercy', delta: 1, weight: 2 });

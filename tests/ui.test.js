@@ -309,6 +309,15 @@ describe('finaleView', () => {
     expect(root.textContent).toContain('收進口袋');
     expect(root.textContent).toContain('0'); // journey tally 代入
   });
+  it('孽鏡反照 choices 為空時顯示 fallback 文字而非空清單', () => {
+    const root = document.createElement('div');
+    const finale = createFinale(hall10, createState()); // choices 為空的全新 state
+    const handlers = { onNextPhase: vi.fn() };
+    finale.phase = 'mirror';
+    renderFinalePhase(finale, handlers, root);
+    expect(root.textContent).toContain('模糊');
+    expect(root.querySelectorAll('.mirror-echo').length).toBe(0);
+  });
   it('ending 階段：highBad 顯示稱號與序章選擇引用', () => {
     const root = document.createElement('div');
     const f = createFinale(hall10, readyState()); // wu80、karma -2 → highBad

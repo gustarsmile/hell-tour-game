@@ -43,15 +43,20 @@ export function renderFinalePhase(finale, handlers, root) {
     appendNext(box, '領判 ▸', handlers.onNextPhase);
   } else if (finale.phase === 'mirror') {
     appendLines(box, d.mirror.lines);
-    const list = el('div', 'mirror-echoes');
-    for (const c of prologueReplay(s)) {
-      const tone = c.delta > 0 ? 'echo-good' : c.delta < 0 ? 'echo-evil' : 'echo-plain';
-      const item = el('div', `mirror-echo ${tone}`);
-      item.appendChild(el('div', 'echo-label', c.label ?? ''));
-      item.appendChild(el('p', 'echo-text', `你的選擇——「${c.text}」`));
-      list.appendChild(item);
+    const echoes = prologueReplay(s);
+    if (echoes.length === 0) {
+      box.appendChild(el('p', 'text', '鏡光流轉，映出的影像卻模糊不清——那一日的記憶，已隨霧氣散去。'));
+    } else {
+      const list = el('div', 'mirror-echoes');
+      for (const c of echoes) {
+        const tone = c.delta > 0 ? 'echo-good' : c.delta < 0 ? 'echo-evil' : 'echo-plain';
+        const item = el('div', `mirror-echo ${tone}`);
+        item.appendChild(el('div', 'echo-label', c.label ?? ''));
+        item.appendChild(el('p', 'echo-text', `你的選擇——「${c.text}」`));
+        list.appendChild(item);
+      }
+      box.appendChild(list);
     }
-    box.appendChild(list);
     const t = journeyTally(s);
     box.appendChild(el('p', 'text',
       d.mirror.journey.replaceAll('{good}', String(t.good)).replaceAll('{evil}', String(t.evil))));

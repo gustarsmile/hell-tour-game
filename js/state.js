@@ -1,4 +1,4 @@
-import { WU_CAP } from './config.js';
+import { WU_CAP, PROLOGUE_ID } from './config.js';
 
 export const AXES = ['honesty', 'speech', 'filial', 'mercy'];
 export const AXIS_LABELS = { honesty: '誠實', speech: '口業', filial: '孝道', mercy: '慈悲' };
@@ -11,7 +11,7 @@ export function createState() {
     wu: 0,
     karma: { honesty: 0, speech: 0, filial: 0, mercy: 0 },
     choices: [],
-    progress: { screen: 'prologue' },
+    progress: { screen: PROLOGUE_ID },
   };
 }
 
@@ -26,6 +26,7 @@ export function recordKarma(state, axis, delta, weight = 1) {
 }
 
 export function recordChoice(state, { scene, label = null, text, axis, delta, weight = 1 }) {
+  if (!AXES.includes(axis)) throw new Error(`未知的心性軸：${axis}`);
   state.choices.push({ scene, label, text, axis, delta, weight });
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WU_THRESHOLD } from '../js/config.js';
+import { WU_THRESHOLD, PROLOGUE_ID } from '../js/config.js';
 import { createState, recordChoice, recordKarma, addWu } from '../js/state.js';
 import {
   createFinale, nextFinalePhase, chooseMengpo, endingKey,
@@ -70,6 +70,12 @@ describe('孽鏡反照資料', () => {
     const s = journeyState();
     expect(prologueReplay(s).map((c) => c.axis)).toEqual(['honesty', 'speech']);
     expect(journeyTally(s)).toEqual({ good: 1, evil: 1 });
+  });
+  it('prologueReplay 以 PROLOGUE_ID 過濾', () => {
+    const s = createState();
+    recordChoice(s, { scene: PROLOGUE_ID, label: '早市', text: 'a', axis: 'honesty', delta: 1 });
+    recordChoice(s, { scene: 'hall3', text: 'b', axis: 'speech', delta: -1 });
+    expect(prologueReplay(s).length).toBe(1);
   });
   it('worstPrologueChoice 取序章第一筆惡選；全善回 null', () => {
     const s = journeyState();

@@ -231,6 +231,9 @@ describe('六殿專屬驗證', () => {
     expect(hall6.quiz).toBeUndefined();
     expect(hall6.mercy).toBeUndefined();
   });
+  it('hall6 結尾含安心專線 1925', () => {
+    expect(FILES['hall6.json'].closing).toContain('1925');
+  });
 });
 
 // ---------- 十殿專屬驗證 ----------

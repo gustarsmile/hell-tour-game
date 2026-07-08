@@ -1,4 +1,4 @@
-import { WU_THRESHOLD } from '../config.js';
+import { WU_THRESHOLD, PROLOGUE_ID } from '../config.js';
 import { karmaVerdict } from '../state.js';
 
 const PHASES = ['mengpo', 'wu', 'mirror', 'ending', 'mission', 'done'];
@@ -31,11 +31,11 @@ export function endingKey(state) {
 }
 
 export function prologueReplay(state) {
-  return state.choices.filter((c) => c.scene === 'prologue');
+  return state.choices.filter((c) => c.scene === PROLOGUE_ID);
 }
 
 export function journeyTally(state) {
-  const rest = state.choices.filter((c) => c.scene !== 'prologue');
+  const rest = state.choices.filter((c) => c.scene !== PROLOGUE_ID);
   return {
     good: rest.filter((c) => c.delta > 0).length,
     evil: rest.filter((c) => c.delta < 0).length,
