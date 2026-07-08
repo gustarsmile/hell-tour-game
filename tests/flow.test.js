@@ -46,7 +46,7 @@ function expectedWu({ acceptBranch }) {
 
 function autoplay(root, storage, { acceptBranch = true } = {}) {
   for (let i = 0; i < 2000; i++) {
-    if (root.querySelector('.results')) return;
+    if (root.querySelector('.finale-end')) return;
     const saved = load(storage);
     const data = saved ? resourceOf(saved.progress.screen) : null;
 
@@ -101,7 +101,7 @@ describe('全流程整合（flow manifest）', () => {
     expect(document.title).toBe(GAME_TITLE);
     autoplay(root, storage, { acceptBranch: true });
     expect(root.textContent).toContain(`悟性值 ${expectedWu({ acceptBranch: true })}`);
-    expect(root.textContent).toContain('心性總評：善');
+    expect(root.textContent).toContain('大覺大悟·代天宣化'); // 悟性100＋全善 → highGood
     // 重新開始 → 回到序章第一句、存檔清空
     [...root.querySelectorAll('button')].find((b) => b.textContent === '重新開始').click();
     expect(root.textContent).toContain(FILES['js/data/prologue.json'].nodes[0].text);
@@ -167,7 +167,7 @@ describe('枉死城支線功德', () => {
   const miniFlow = {
     screens: [
       { id: 'hall6', type: 'visit', src: 'hall6.json' },
-      { id: 'results', type: 'results' },
+      { id: 'hall10', type: 'finale', src: 'hall10.json' },
     ],
   };
   const miniLoad = async (p) =>
@@ -179,6 +179,7 @@ describe('枉死城支線功德', () => {
     await startGame({ root, loadJSON: miniLoad, storage });
     autoplay(root, storage, { acceptBranch: true });
     expect(root.textContent).toContain('悟性值 10');
+    expect(root.textContent).toContain('不識一字·菩薩心腸');
   });
   it('婉拒支線 → 0 分', async () => {
     const storage = fakeStorage();

@@ -1,13 +1,15 @@
 import { GAME_TITLE } from './config.js';
 import { createState, recordKarma, recordChoice, addWu, save, load, clearSave } from './state.js';
-import { addCard } from './booklet.js';
+import { loadBooklet, addCard } from './booklet.js';
 import { createPlayer } from './engine/scene.js';
 import { createTrial, nextPhase, spotLie, judge, react, persuade, trialScore } from './engine/trial.js';
 import { createVisit, nextVisitPhase, answerQuiz, chooseMercy, takeBranch, visitScore } from './engine/visit.js';
+import { createFinale, nextFinalePhase, chooseMengpo } from './engine/finale.js';
 import { renderNode, el } from './ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from './ui/trialView.js';
 import { renderVisitPhase } from './ui/visitView.js';
-import { renderResults } from './ui/results.js';
+import { renderFinalePhase } from './ui/finaleView.js';
+import { renderBooklet } from './ui/bookletView.js';
 
 async function fetchJSON(path) {
   const res = await fetch(path);
@@ -114,6 +116,31 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
     step();
   }
 
+  function bookletEntries() {
+    const owned = loadBooklet(storage);
+    return flow.screens
+      .filter((scr) => resources[scr.id] && resources[scr.id].karmaCard)
+      .map((scr) => ({
+        id: scr.id,
+        hall: resources[scr.id].hall,
+        card: resources[scr.id].karmaCard,
+        owned: owned.includes(scr.id),
+      }));
+  }
+
+  function runFinale(data) {
+    const finale = createFinale(data, state);
+    const step = () => renderFinalePhase(finale, handlers, root);
+    const handlers = {
+      onNextPhase: () => { nextFinalePhase(finale); step(); },
+      onMengpo: (i) => { chooseMengpo(finale, i); step(); },
+      onShare: () => step(), // Task 7 接真實作（分享卡）
+      onBooklet: () => renderBooklet(bookletEntries(), step, root),
+      onRestart: restart,
+    };
+    step();
+  }
+
   const screens = {};
   flow.screens.forEach((scr, idx) => {
     const nextScr = flow.screens[idx + 1];
@@ -131,8 +158,8 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
       } else if (scr.type === 'visit') {
         runScene(linesToScene(data.intro), () =>
           runVisit(data, () => renderKarmaCard(data.karmaCard, collectCard, root)));
-      } else if (scr.type === 'results') {
-        renderResults(state, restart, root);
+      } else if (scr.type === 'finale') {
+        runScene(linesToScene(data.intro), () => runFinale(data));
       } else {
         throw new Error(`未知的畫面類型：${scr.type}`);
       }

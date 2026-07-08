@@ -110,6 +110,41 @@ function validateVisit(v) {
   validateKarmaCard(v.karmaCard);
 }
 
+function validateFinale(f) {
+  expect(f.king.length).toBeGreaterThan(0);
+  expect(f.intro.length).toBeGreaterThanOrEqual(1);
+  expect(f.mengpo.lines.length).toBeGreaterThanOrEqual(1);
+  expect(f.mengpo.prompt.length).toBeGreaterThan(0);
+  expect(f.mengpo.choices.length).toBe(2);
+  expect(f.mengpo.choices[0].drank).toBe(false); // autoplay 慣例：首選為「不喝」（善向）
+  for (const c of f.mengpo.choices) {
+    expect(typeof c.drank).toBe('boolean');
+    expect(c.text.length).toBeGreaterThan(0);
+    expect(c.reply.length).toBeGreaterThan(0);
+  }
+  expect(f.wuReveal.lines.length).toBeGreaterThanOrEqual(1);
+  expect(f.wuReveal.note.length).toBeGreaterThan(0);
+  expect(f.mirror.lines.length).toBeGreaterThanOrEqual(1);
+  expect(f.mirror.journey).toContain('{good}');
+  expect(f.mirror.journey).toContain('{evil}');
+  const keys = ['highBad', 'highGood', 'lowBad', 'lowGood'];
+  expect(Object.keys(f.endings).sort()).toEqual(keys);
+  for (const k of keys) {
+    const e = f.endings[k];
+    expect(e.title.length).toBeGreaterThan(0);
+    expect(e.comment.length).toBeGreaterThanOrEqual(1);
+    for (const line of e.comment) expect(line.text.length).toBeGreaterThan(0);
+    expect(e.motto.length).toBeGreaterThan(0);
+  }
+  for (const k of ['highBad', 'lowBad']) {
+    expect(f.endings[k].quote).toContain('{text}'); // 引用序章具體選擇（設計 §3.5）
+    expect(f.endings[k].quoteFallback.length).toBeGreaterThan(0);
+  }
+  expect(f.mission.kept.length).toBeGreaterThanOrEqual(1);
+  expect(f.mission.drank.length).toBeGreaterThanOrEqual(1);
+  expect(f.source.url).toMatch(/^https?:\/\//);
+}
+
 // ---------- flow.json 守門 ----------
 
 describe('flow.json 驗證', () => {
@@ -117,9 +152,9 @@ describe('flow.json 驗證', () => {
     const ids = flow.screens.map((s) => s.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(flow.screens[0].id).toBe('prologue');
-    expect(flow.screens.at(-1).type).toBe('results');
+    expect(flow.screens.at(-1).type).toBe('finale');
     for (const s of flow.screens) {
-      expect(['scene', 'trial', 'visit', 'results']).toContain(s.type);
+      expect(['scene', 'trial', 'visit', 'finale']).toContain(s.type);
       if (s.type !== 'results') expect(FILES[s.src]).toBeDefined();
     }
   });
@@ -131,7 +166,7 @@ describe('flow.json 驗證', () => {
     for (const { scr, data } of halls) {
       expect(data.hall).toBeGreaterThan(prev);
       prev = data.hall;
-      expect(scr.type === 'trial' ? 'full' : 'visit').toBe(data.type);
+      expect({ trial: 'full', visit: 'visit', finale: 'finale' }[scr.type]).toBe(data.type);
     }
   });
 });
@@ -146,6 +181,8 @@ describe('內容資料驗證', () => {
       it(`${scr.src}：完整判案案例結構正確`, () => validateFullCase(FILES[scr.src]));
     } else if (scr.type === 'visit') {
       it(`${scr.src}：見聞殿結構正確`, () => validateVisit(FILES[scr.src]));
+    } else if (scr.type === 'finale') {
+      it(`${scr.src}：結算關結構正確`, () => validateFinale(FILES[scr.src]));
     }
   }
 });
@@ -187,5 +224,17 @@ describe('六殿專屬驗證', () => {
     expect(hall6.branch.rewardWu).toBe(10);
     expect(hall6.quiz).toBeUndefined();
     expect(hall6.mercy).toBeUndefined();
+  });
+});
+
+// ---------- 十殿專屬驗證 ----------
+
+describe('十殿專屬驗證', () => {
+  it('四結局稱號與設計文件一致', () => {
+    const e = FILES['hall10.json'].endings;
+    expect(e.highGood.title).toBe('大覺大悟·代天宣化');
+    expect(e.highBad.title).toBe('滿腹經綸·知易行難');
+    expect(e.lowGood.title).toBe('不識一字·菩薩心腸');
+    expect(e.lowBad.title).toBe('執迷不悟·輪迴重修');
   });
 });

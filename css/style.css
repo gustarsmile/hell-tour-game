@@ -184,3 +184,24 @@ body {
 }
 .booklet-card.missing { opacity: 0.55; border-style: dashed; }
 .booklet-hall { color: var(--gold); letter-spacing: 0.2em; margin-bottom: 4px; }
+
+/* 結算關 */
+.mirror-echoes { margin: 12px 0; display: grid; gap: 10px; }
+.mirror-echo {
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: rgba(47, 93, 107, 0.12);
+}
+.mirror-echo.echo-good { border-color: var(--azure); }
+.mirror-echo.echo-evil { border-color: var(--vermilion); background: rgba(158, 43, 37, 0.12); }
+.echo-label { color: var(--gold); font-size: 0.85rem; letter-spacing: 0.2em; }
+.echo-text { margin: 4px 0 0; }
+.ending-title {
+  text-align: center;
+  color: var(--gold);
+  font-size: 1.5rem;
+  letter-spacing: 0.15em;
+  margin: 12px 0;
+}
+.ending-quote { border-left: 3px solid var(--vermilion); padding-left: 12px; }

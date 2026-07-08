@@ -11,6 +11,6 @@
     { "id": "hall7", "type": "trial", "src": "hall7.json" },
     { "id": "hall8", "type": "visit", "src": "hall8.json" },
     { "id": "hall9", "type": "visit", "src": "hall9.json" },
-    { "id": "results", "type": "results" }
+    { "id": "hall10", "type": "finale", "src": "hall10.json" }
   ]
 }

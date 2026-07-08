@@ -3,12 +3,14 @@ import { describe, it, expect, vi } from 'vitest';
 import { el, renderNode, hallLabel, renderError } from '../js/ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from '../js/ui/trialView.js';
 import { renderBooklet } from '../js/ui/bookletView.js';
-import { renderResults } from '../js/ui/results.js';
 import { renderVisitPhase } from '../js/ui/visitView.js';
+import { renderFinalePhase } from '../js/ui/finaleView.js';
 import { createTrial, nextPhase } from '../js/engine/trial.js';
 import { createVisit, nextVisitPhase } from '../js/engine/visit.js';
-import { createState, recordKarma } from '../js/state.js';
+import { createFinale, nextFinalePhase } from '../js/engine/finale.js';
+import { createState, recordKarma, recordChoice, addWu } from '../js/state.js';
 import hall1 from '../js/data/hall1.json';
+import hall10 from '../js/data/hall10.json';
 
 describe('render.js', () => {
   it('el 建立元素', () => {
@@ -81,14 +83,6 @@ describe('小修整（階段2 Task1）', () => {
     const lines = root.querySelectorAll('.testimony-line');
     expect(lines[1].disabled).toBe(true);
     expect(lines[0].disabled).toBe(false);
-  });
-  it('結算負數軸顯示全形負號', () => {
-    const root = document.createElement('div');
-    const s = createState();
-    recordKarma(s, 'speech', -1);
-    renderResults(s, vi.fn(), root);
-    expect(root.textContent).toContain('口業　－1');
-    expect(root.textContent).not.toContain('-1');
   });
 });
 
@@ -280,5 +274,67 @@ describe('bookletView', () => {
     expect(root.textContent).not.toContain('重遊');
     [...root.querySelectorAll('button')].find((b) => b.textContent.includes('合上')).click();
     expect(onBack).toHaveBeenCalled();
+  });
+});
+
+describe('finaleView', () => {
+  function readyState() {
+    const s = createState();
+    addWu(s, 80);
+    recordChoice(s, { scene: 'prologue', label: '早市多找的錢', text: '收進口袋——是他自己找錯的', axis: 'honesty', delta: -1, weight: 2 });
+    recordKarma(s, 'honesty', -1, 2);
+    return s;
+  }
+  it('mengpo 未選時渲染兩選項；選後顯示 reply 與繼續鈕', () => {
+    const root = document.createElement('div');
+    const f = createFinale(hall10, readyState());
+    renderFinalePhase(f, { onMengpo: vi.fn() }, root);
+    expect(root.querySelectorAll('.btn-choice').length).toBe(2);
+    f.drank = false;
+    f.mengpoReply = hall10.mengpo.choices[0].reply;
+    renderFinalePhase(f, { onNextPhase: vi.fn() }, root);
+    expect(root.textContent).toContain(hall10.mengpo.choices[0].reply);
+    expect(root.querySelector('.btn-next')).not.toBeNull();
+  });
+  it('wu 階段顯示悟性值；mirror 階段回放序章選擇與旅途統計', () => {
+    const root = document.createElement('div');
+    const f = createFinale(hall10, readyState());
+    f.phase = 'wu';
+    renderFinalePhase(f, { onNextPhase: vi.fn() }, root);
+    expect(root.textContent).toContain('悟性值 80');
+    f.phase = 'mirror';
+    renderFinalePhase(f, { onNextPhase: vi.fn() }, root);
+    expect(root.querySelectorAll('.mirror-echo').length).toBe(1);
+    expect(root.textContent).toContain('早市多找的錢');
+    expect(root.textContent).toContain('收進口袋');
+    expect(root.textContent).toContain('0'); // journey tally 代入
+  });
+  it('ending 階段：highBad 顯示稱號與序章選擇引用', () => {
+    const root = document.createElement('div');
+    const f = createFinale(hall10, readyState()); // wu80、karma -2 → highBad
+    f.phase = 'ending';
+    renderFinalePhase(f, { onNextPhase: vi.fn() }, root);
+    expect(root.textContent).toContain('滿腹經綸·知易行難');
+    expect(root.querySelector('.ending-quote').textContent).toContain('收進口袋');
+  });
+  it('mission 依 drank 顯示兩版；done 為 finale-end 且含三鈕', () => {
+    const root = document.createElement('div');
+    const f = createFinale(hall10, readyState());
+    f.phase = 'mission';
+    f.drank = true;
+    renderFinalePhase(f, { onNextPhase: vi.fn() }, root);
+    expect(root.textContent).toContain(hall10.mission.drank[0].text);
+    f.phase = 'done';
+    const onShare = vi.fn(); const onBooklet = vi.fn(); const onRestart = vi.fn();
+    renderFinalePhase(f, { onShare, onBooklet, onRestart }, root);
+    expect(root.querySelector('.finale-end')).not.toBeNull();
+    expect(root.textContent).toContain('悟性值 80');
+    const btns = [...root.querySelectorAll('button')];
+    btns.find((b) => b.textContent.includes('分享卡')).click();
+    btns.find((b) => b.textContent.includes('善書冊')).click();
+    btns.find((b) => b.textContent === '重新開始').click();
+    expect(onShare).toHaveBeenCalled();
+    expect(onBooklet).toHaveBeenCalled();
+    expect(onRestart).toHaveBeenCalled();
   });
 });
