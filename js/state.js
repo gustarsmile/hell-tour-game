@@ -3,12 +3,14 @@ import { WU_CAP } from './config.js';
 export const AXES = ['honesty', 'speech', 'filial', 'mercy'];
 export const AXIS_LABELS = { honesty: '誠實', speech: '口業', filial: '孝道', mercy: '慈悲' };
 
-const SAVE_KEY = 'hellTourSave.v1';
+const SAVE_KEY = 'hellTourSave.v2';
+const LEGACY_SAVE_KEYS = ['hellTourSave.v1']; // v1 無選擇紀錄，孽鏡反照無從回放，直接淘汰
 
 export function createState() {
   return {
     wu: 0,
     karma: { honesty: 0, speech: 0, filial: 0, mercy: 0 },
+    choices: [],
     progress: { screen: 'prologue' },
   };
 }
@@ -21,6 +23,10 @@ export function addWu(state, pts) {
 export function recordKarma(state, axis, delta, weight = 1) {
   if (!AXES.includes(axis)) throw new Error(`未知的心性軸：${axis}`);
   state.karma[axis] += delta * weight;
+}
+
+export function recordChoice(state, { scene, label = null, text, axis, delta, weight = 1 }) {
+  state.choices.push({ scene, label, text, axis, delta, weight });
 }
 
 export function karmaSum(state) {
@@ -42,11 +48,12 @@ export function deserialize(json) {
     ...base,
     ...raw,
     karma: { ...base.karma, ...(raw.karma ?? {}) },
+    choices: Array.isArray(raw.choices) ? raw.choices : [],
     progress: { ...base.progress, ...(raw.progress ?? {}) },
   };
 }
 
-function safeStorage(storage) {
+export function safeStorage(storage) {
   if (storage !== undefined) return storage;
   try {
     return globalThis.localStorage;
@@ -67,7 +74,9 @@ export function save(state, storage) {
 export function load(storage) {
   try {
     const s = safeStorage(storage);
-    const json = s ? s.getItem(SAVE_KEY) : null;
+    if (!s) return null;
+    for (const k of LEGACY_SAVE_KEYS) s.removeItem(k);
+    const json = s.getItem(SAVE_KEY);
     return json ? deserialize(json) : null;
   } catch {
     clearSave(storage);
