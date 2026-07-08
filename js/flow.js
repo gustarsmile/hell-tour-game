@@ -1,5 +1,6 @@
 import { GAME_TITLE } from './config.js';
 import { createState, recordKarma, recordChoice, addWu, save, load, clearSave } from './state.js';
+import { addCard } from './booklet.js';
 import { createPlayer } from './engine/scene.js';
 import { createTrial, nextPhase, spotLie, judge, react, persuade, trialScore } from './engine/trial.js';
 import { createVisit, nextVisitPhase, answerQuiz, chooseMercy, takeBranch, visitScore } from './engine/visit.js';
@@ -117,6 +118,7 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
   flow.screens.forEach((scr, idx) => {
     const nextScr = flow.screens[idx + 1];
     const goNext = nextScr ? () => screens[nextScr.id]() : () => {};
+    const collectCard = () => { addCard(scr.id, storage); goNext(); };
     screens[scr.id] = () => {
       state.progress.screen = scr.id;
       save(state, storage);
@@ -125,10 +127,10 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
         runScene(data, goNext);
       } else if (scr.type === 'trial') {
         runScene(linesToScene(data.intro), () =>
-          runTrial(data, () => renderKarmaCard(data.karmaCard, goNext, root)));
+          runTrial(data, () => renderKarmaCard(data.karmaCard, collectCard, root)));
       } else if (scr.type === 'visit') {
         runScene(linesToScene(data.intro), () =>
-          runVisit(data, () => renderKarmaCard(data.karmaCard, goNext, root)));
+          runVisit(data, () => renderKarmaCard(data.karmaCard, collectCard, root)));
       } else if (scr.type === 'results') {
         renderResults(state, restart, root);
       } else {

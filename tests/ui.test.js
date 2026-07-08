@@ -2,6 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { el, renderNode, hallLabel, renderError } from '../js/ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from '../js/ui/trialView.js';
+import { renderBooklet } from '../js/ui/bookletView.js';
 import { renderResults } from '../js/ui/results.js';
 import { renderVisitPhase } from '../js/ui/visitView.js';
 import { createTrial, nextPhase } from '../js/engine/trial.js';
@@ -253,5 +254,31 @@ describe('visitView', () => {
     expect(root.textContent).toContain('走吧。');
     root.querySelector('.btn-next').click();
     expect(onFinish).toHaveBeenCalled();
+  });
+});
+
+describe('bookletView', () => {
+  const entries = [
+    { id: 'hall1', hall: 1, owned: true, card: { sin: '斗秤不公', result: '秤鉤獄', lesson: '公平交易', source: { chapter: 8, url: 'https://x' } } },
+    { id: 'hall2', hall: 2, owned: false, card: { sin: 's2', result: 'r2', lesson: 'l2', source: { chapter: null, url: 'https://x' } } },
+  ];
+  it('顯示收集進度、已收卡全文、未收卡占位與補完提示', () => {
+    const root = document.createElement('div');
+    renderBooklet(entries, vi.fn(), root);
+    expect(root.textContent).toContain('1／2');
+    expect(root.textContent).toContain('斗秤不公');
+    expect(root.textContent).toContain('尚未收得');
+    expect(root.textContent).toContain('重遊');
+    expect(root.querySelectorAll('.booklet-card').length).toBe(2);
+    expect(root.querySelectorAll('.booklet-card.missing').length).toBe(1);
+  });
+  it('集滿時不顯示補完提示；合上冊觸發 onBack', () => {
+    const root = document.createElement('div');
+    const full = entries.map((e) => ({ ...e, owned: true }));
+    const onBack = vi.fn();
+    renderBooklet(full, onBack, root);
+    expect(root.textContent).not.toContain('重遊');
+    [...root.querySelectorAll('button')].find((b) => b.textContent.includes('合上')).click();
+    expect(onBack).toHaveBeenCalled();
   });
 });

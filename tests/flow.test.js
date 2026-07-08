@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { startGame } from '../js/flow.js';
 import { createState, save, load } from '../js/state.js';
+import { loadBooklet } from '../js/booklet.js';
 import { GAME_TITLE } from '../js/config.js';
 
 const modules = import.meta.glob('../js/data/*.json', { eager: true });
@@ -147,6 +148,18 @@ describe('全流程整合（flow manifest）', () => {
     await startGame({ root, loadJSON, storage });
     expect(root.textContent).not.toContain('繼續旅程');
     expect(root.textContent).toContain(FILES['js/data/prologue.json'].nodes[0].text);
+  });
+
+  it('通關收滿因果卡入善書冊，重新開始後冊仍保留', async () => {
+    const storage = fakeStorage();
+    const root = document.createElement('div');
+    await startGame({ root, loadJSON, storage });
+    autoplay(root, storage, { acceptBranch: true });
+    const cardScreens = flowData.screens
+      .filter((s) => resourceOf(s.id)?.karmaCard).map((s) => s.id);
+    expect([...loadBooklet(storage)].sort()).toEqual([...cardScreens].sort());
+    [...root.querySelectorAll('button')].find((b) => b.textContent === '重新開始').click();
+    expect([...loadBooklet(storage)].sort()).toEqual([...cardScreens].sort());
   });
 });
 

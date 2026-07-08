@@ -173,3 +173,14 @@ body {
 }
 .watch-caption { margin: 0; color: #d9b8a0; line-height: 1.7; }
 .btn-decline { opacity: 0.85; }
+
+/* 善書冊 */
+.booklet-card {
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  background: var(--ink-2);
+}
+.booklet-card.missing { opacity: 0.55; border-style: dashed; }
+.booklet-hall { color: var(--gold); letter-spacing: 0.2em; margin-bottom: 4px; }
