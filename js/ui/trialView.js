@@ -1,4 +1,4 @@
-import { el, NUM, hallLabel } from './render.js';
+import { el, NUM, hallLabel, artImg } from './render.js';
 import { lieIndexes } from '../engine/trial.js';
 
 export function renderTrialPhase(trial, handlers, root, message = '') {
@@ -6,9 +6,11 @@ export function renderTrialPhase(trial, handlers, root, message = '') {
   const c = trial.caseData;
   const box = el('div', 'scene-box trial-box');
   box.appendChild(el('div', 'hall-title', `${hallLabel(c.hall)}・${c.king}`));
+  if (c.art?.scene) box.appendChild(artImg(c.art.scene));
 
   if (trial.phase === 'testimony') {
     box.appendChild(el('div', 'speaker', `罪魂 ${c.soul.name}（${c.soul.title}）供詞`));
+    if (c.art?.soul) box.appendChild(artImg(c.art.soul, 'art-portrait'));
     const scroll = el('div', 'testimony');
     c.testimony.forEach((s) => scroll.appendChild(el('p', 'testimony-line', s.text)));
     box.appendChild(scroll);
@@ -20,6 +22,7 @@ export function renderTrialPhase(trial, handlers, root, message = '') {
     c.mirror.forEach((m, i) => {
       const p = el('div', 'mirror-panel');
       p.appendChild(el('div', 'mirror-num', `其${NUM[i]}`));
+      if (c.art?.mirror?.[i]) p.appendChild(artImg(c.art.mirror[i], 'art-mirror'));
       p.appendChild(el('p', 'mirror-caption', m.caption));
       panels.appendChild(p);
     });

@@ -5,11 +5,22 @@ export function el(tag, className, text) {
   return node;
 }
 
-export function renderNode(node, handlers, root) {
+export function artImg(file, className = 'art-banner') {
+  const img = el('img', className);
+  img.src = `assets/art/${file}`;
+  img.alt = '';
+  img.loading = 'lazy';
+  img.addEventListener('error', () => img.remove()); // 資產缺失時優雅降級
+  return img;
+}
+
+export function renderNode(node, handlers, root, opts = {}) {
   root.innerHTML = '';
   const box = el('div', 'scene-box');
+  if (opts.art) box.appendChild(artImg(opts.art));
   if (node.speaker) box.appendChild(el('div', 'speaker', node.speaker));
   box.appendChild(el('p', 'text', node.text));
+  if (node.img) box.appendChild(artImg(node.img, 'art-figure'));
   if (node.type === 'line') {
     const btn = el('button', 'btn btn-next', '繼續 ▸');
     btn.addEventListener('click', handlers.onAdvance);

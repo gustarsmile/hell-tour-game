@@ -58,7 +58,7 @@ export async function startGame({ root, loadJSON = fetchJSON, storage, audio = N
       renderNode(node, {
         onAdvance: () => { player.advance(); step(); },
         onChoose: (i) => { player.choose(i); step(); },
-      }, root);
+      }, root, { art: sceneData.art });
     };
     step();
   }

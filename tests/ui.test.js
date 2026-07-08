@@ -126,6 +126,18 @@ describe('小修整（階段3 Task1）', () => {
   });
 });
 
+describe('trialView 美術整合', () => {
+  it('trial testimony 階段渲染殿景橫幅與罪魂立繪', () => {
+    const root = document.createElement('div');
+    const trial = createTrial(hall1);
+    const handlers = { onNextPhase: vi.fn() };
+    renderTrialPhase(trial, handlers, root);
+    const imgs = [...root.querySelectorAll('img')].map((i) => i.getAttribute('src'));
+    expect(imgs).toContain('assets/art/hall1-scene.webp');
+    expect(imgs).toContain('assets/art/soul-hall1.webp');
+  });
+});
+
 describe('trialView react 階段', () => {
   const reactCase = {
     ...hall1,

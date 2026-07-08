@@ -1,4 +1,4 @@
-import { el, hallLabel } from './render.js';
+import { el, hallLabel, artImg } from './render.js';
 import { endingKey, prologueReplay, journeyTally, endingQuote } from '../engine/finale.js';
 
 function appendNext(box, label, onClick) {
@@ -11,6 +11,7 @@ function appendLines(box, lines) {
   for (const l of lines) {
     if (l.speaker) box.appendChild(el('div', 'speaker', l.speaker));
     box.appendChild(el('p', 'text', l.text));
+    if (l.img) box.appendChild(artImg(l.img, 'art-figure'));
   }
 }
 
@@ -20,6 +21,7 @@ export function renderFinalePhase(finale, handlers, root) {
   const s = finale.state;
   const box = el('div', 'scene-box finale-box');
   box.appendChild(el('div', 'hall-title', `${hallLabel(d.hall)}・${d.king}`));
+  if (d.art?.scene) box.appendChild(artImg(d.art.scene));
 
   if (finale.phase === 'mengpo') {
     appendLines(box, d.mengpo.lines);
@@ -65,6 +67,8 @@ export function renderFinalePhase(finale, handlers, root) {
     const e = d.endings[endingKey(s)];
     box.appendChild(el('div', 'card-title', '判 詞'));
     box.appendChild(el('p', 'ending-title', e.title));
+    const artFile = d.art?.endings?.[endingKey(s)];
+    if (artFile) box.appendChild(artImg(artFile, 'art-ending'));
     appendLines(box, e.comment);
     const quote = endingQuote(e, s);
     if (quote) box.appendChild(el('p', 'ending-quote', quote));

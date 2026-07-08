@@ -48,6 +48,11 @@
       { "text": "「妳這長舌婦，拆散人家一家子，拔舌也是活該！」", "score": 0, "reaction": "林陳氏猛地抬頭，尖聲叫道：「我說的哪句不是實情！要怪就怪他們自己耳根軟！」怨氣反倒更重了。" }
     ]
   },
+  "art": {
+    "scene": "hall3-scene.webp",
+    "soul": "soul-hall3.webp",
+    "mirror": ["mirror-hall3-1.webp", "mirror-hall3-2.webp", "mirror-hall3-3.webp"]
+  },
   "closing": "濟公搖著蒲扇，慢悠悠道：「口是傷人斧，言是割舌刀。一句話能成一個家，也能散一個家。——走，下一殿。」",
   "karmaCard": {
     "sin": "造謠毀謗、搬弄是非、挑撥離間",

@@ -49,6 +49,11 @@
       { "text": "「你這為富不仁的老狐狸，裝了一輩子善人，也有今天！」", "score": 0, "reaction": "錢有田勃然大怒：「我捐的錢是假的嗎？功德碑是假的嗎！」他吼得面紅耳赤，怨氣直沖殿頂。" }
     ]
   },
+  "art": {
+    "scene": "hall7-scene.webp",
+    "soul": "soul-hall7.webp",
+    "mirror": ["mirror-hall7-1.webp", "mirror-hall7-2.webp", "mirror-hall7-3.webp"]
+  },
   "closing": "濟公搖著蒲扇：「見著了吧？香是冷的，米是熱的。慈悲兩個字，從來不寫在碑上，寫在人心上。——走，前面的路，越來越深了。」",
   "karmaCard": {
     "sin": "為富不仁、趁火打劫、見死不救",

@@ -22,6 +22,7 @@
       { "text": "嗤笑一聲：「偷了半輩子，這雙手爛得不冤。」", "karma": { "axis": "mercy", "delta": -1 }, "reply": "罪魂臉上血色盡失。濟公輕輕嘆了口氣，什麼也沒說。" }
     ]
   },
+  "art": { "scene": "hall4-scene.webp", "watch": "watch-hall4.webp" },
   "closing": "出了獄門，濟公才慢慢開口：「地府的刑罰治得了手，治不了心。心存一分慈悲，勝過燒十炷高香。——走吧。」",
   "karmaCard": {
     "sin": "竊盜詐欺、開空頭支票捲款，雙手作孽",

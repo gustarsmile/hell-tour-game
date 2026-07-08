@@ -211,6 +211,33 @@ body {
   margin: 12px 0;
 }
 
+/* 插圖 */
+.art-banner {
+  display: block;
+  width: calc(100% + 36px);
+  margin: -20px -18px 14px;
+  border-radius: 6px 6px 0 0;
+}
+.art-portrait {
+  display: block;
+  width: 56%;
+  margin: 0 auto 14px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+}
+.art-mirror, .art-watch, .art-ending {
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.art-figure {
+  display: block;
+  width: 48%;
+  margin: 0 auto 12px;
+  border-radius: 6px;
+}
+
 /* 音效開關 */
 #audio-toggle {
   position: fixed;

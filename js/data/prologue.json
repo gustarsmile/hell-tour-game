@@ -1,5 +1,6 @@
 {
   "id": "prologue",
+  "art": "prologue-scene.webp",
   "karmaWeight": 2,
   "start": "intro1",
   "nodes": [

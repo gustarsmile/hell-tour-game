@@ -53,6 +53,11 @@
       }
     ]
   },
+  "art": {
+    "scene": "hall1-scene.webp",
+    "soul": "soul-hall1.webp",
+    "mirror": ["mirror-hall1-1.webp", "mirror-hall1-2.webp", "mirror-hall1-3.webp"]
+  },
   "closing": "濟公搖著蒲扇，慢悠悠道：「見著了吧？一桿秤，秤的是米，也是人心。——走，該去下一殿了。」",
   "karmaCard": {
     "sin": "斗秤不公、摻假欺客",

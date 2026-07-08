@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { existsSync } from 'node:fs';
 import { AXES } from '../js/state.js';
 import prologue from '../js/data/prologue.json';
 
@@ -14,6 +15,11 @@ const flow = FILES['flow.json'];
 function expectKarma(karma) {
   expect(AXES).toContain(karma.axis);
   expect([-1, 0, 1]).toContain(karma.delta);
+}
+
+function expectArt(file) {
+  expect(typeof file).toBe('string');
+  expect(existsSync(`assets/art/${file}`), file).toBe(true);
 }
 
 function validateScene(scene) {
@@ -88,6 +94,10 @@ function validateFullCase(c) {
   if (c.postScene) validateScene(c.postScene);
   expect(c.closing.length).toBeGreaterThan(0);
   validateKarmaCard(c.karmaCard);
+  expectArt(c.art.scene);
+  expectArt(c.art.soul);
+  expect(c.art.mirror.length).toBe(3);
+  c.art.mirror.forEach(expectArt);
 }
 
 function validateVisit(v) {
@@ -114,6 +124,8 @@ function validateVisit(v) {
   }
   expect(v.closing.length).toBeGreaterThan(0);
   validateKarmaCard(v.karmaCard);
+  expectArt(v.art.scene);
+  expectArt(v.art.watch);
 }
 
 function validateFinale(f) {
@@ -149,6 +161,8 @@ function validateFinale(f) {
   expect(f.mission.kept.length).toBeGreaterThanOrEqual(1);
   expect(f.mission.drank.length).toBeGreaterThanOrEqual(1);
   expect(f.source.url).toMatch(/^https?:\/\//);
+  expectArt(f.art.scene);
+  for (const k of keys) expectArt(f.art.endings[k]);
 }
 
 // ---------- flow.json 守門 ----------
@@ -162,6 +176,7 @@ describe('flow.json 驗證', () => {
     for (const s of flow.screens) {
       expect(['scene', 'trial', 'visit', 'finale']).toContain(s.type);
       expect(FILES[s.src]).toBeDefined();
+      if (s.type === 'scene') expectArt(FILES[s.src].art);
     }
   });
   it('殿的順序遞增且 type 與資料一致', () => {
@@ -248,5 +263,21 @@ describe('十殿專屬驗證', () => {
   });
   it('hall10 結算出處連結與起始回一致（第55回=/57.htm）', () => {
     expect(FILES['hall10.json'].source.url).toBe('https://www.taolibrary.com/category/category48/c48002b/57.htm');
+  });
+});
+
+// ---------- 美術資產：全域補漏 ----------
+
+describe('美術欄位驗證', () => {
+  it('資料中所有 .webp 引用皆存在', () => {
+    const seen = [];
+    const walk = (v) => {
+      if (typeof v === 'string' && v.endsWith('.webp')) seen.push(v);
+      else if (Array.isArray(v)) v.forEach(walk);
+      else if (v && typeof v === 'object') Object.values(v).forEach(walk);
+    };
+    Object.values(FILES).forEach(walk);
+    expect(seen.length).toBeGreaterThan(0);
+    seen.forEach(expectArt);
   });
 });

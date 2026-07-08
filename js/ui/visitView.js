@@ -1,13 +1,15 @@
-import { el, hallLabel } from './render.js';
+import { el, hallLabel, artImg } from './render.js';
 
 export function renderVisitPhase(visit, handlers, root, message = '') {
   root.innerHTML = '';
   const d = visit.data;
   const box = el('div', 'scene-box visit-box');
   box.appendChild(el('div', 'hall-title', `${hallLabel(d.hall)}・${d.king}`));
+  if (d.art?.scene) box.appendChild(artImg(d.art.scene));
 
   if (visit.phase === 'watch') {
     box.appendChild(el('div', 'speaker', d.watch.title));
+    if (d.art?.watch) box.appendChild(artImg(d.art.watch, 'art-watch'));
     const panels = el('div', 'watch-panels');
     d.watch.panels.forEach((p) => {
       const pn = el('div', 'watch-panel');

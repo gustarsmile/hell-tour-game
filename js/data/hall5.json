@@ -49,6 +49,11 @@
       { "text": "「你這種不孝子，倒吊活該！還敢喊冤？」", "score": 0, "reaction": "陳阿貴梗著脖子吼道：「我給她辦的喪事花了多少錢，你知道嗎！」怨氣沖天，陰差只得將他強行押下。" }
     ]
   },
+  "art": {
+    "scene": "hall5-scene.webp",
+    "soul": "soul-hall5.webp",
+    "mirror": ["mirror-hall5-1.webp", "mirror-hall5-2.webp", "mirror-hall5-3.webp"]
+  },
   "closing": "濟公收回蒲扇，望向殿旁高臺：「案子斷完了，還有一站。——跟我上望鄉臺。」",
   "postScene": {
     "id": "hall5-lookout",
