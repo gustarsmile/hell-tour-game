@@ -33,7 +33,9 @@ function linesToScene(lines) {
   };
 }
 
-export async function startGame({ root, loadJSON = fetchJSON, storage }) {
+const NOOP_AUDIO = { chime() {}, flip() {} };
+
+export async function startGame({ root, loadJSON = fetchJSON, storage, audio = NOOP_AUDIO }) {
   document.title = GAME_TITLE;
 
   const flow = await loadJSON('js/data/flow.json');
@@ -69,6 +71,7 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
       onNextPhase: () => { message = ''; nextPhase(trial); step(); },
       onSpot: (i) => {
         const r = spotLie(trial, i);
+        if (r.hit) audio.chime();
         if (!r.hit) message = '濟公搖搖扇子：「這句倒是實話。再想想——孽鏡照見了什麼？」';
         else if (!r.allFound) message = '正是謊言！但破綻不只一處，再找找。';
         else { message = ''; nextPhase(trial); }
@@ -76,6 +79,7 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
       },
       onJudge: (i) => {
         const r = judge(trial, i);
+        if (r.correct) audio.chime();
         if (!r.correct) message = '濟公低聲道：「再看看各獄所懲之罪——對得上他做的事嗎？」';
         else { message = ''; nextPhase(trial); }
         step();
@@ -99,6 +103,7 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
       onNextPhase: () => { message = ''; nextVisitPhase(visit); step(); },
       onQuiz: (i) => {
         const r = answerQuiz(visit, i);
+        if (r.correct) audio.chime();
         message = r.correct ? '' : data.quiz.hint;
         step();
       },
@@ -143,7 +148,7 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
         }, qr);
         renderShareOverlay(canvas, step, root);
       },
-      onBooklet: () => renderBooklet(bookletEntries(), step, root),
+      onBooklet: () => { audio.flip(); renderBooklet(bookletEntries(), step, root); },
       onRestart: restart,
     };
     step();
@@ -162,10 +167,10 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
         runScene(data, goNext);
       } else if (scr.type === 'trial') {
         runScene(linesToScene(data.intro), () =>
-          runTrial(data, () => renderKarmaCard(data.karmaCard, collectCard, root)));
+          runTrial(data, () => { audio.flip(); renderKarmaCard(data.karmaCard, collectCard, root); }));
       } else if (scr.type === 'visit') {
         runScene(linesToScene(data.intro), () =>
-          runVisit(data, () => renderKarmaCard(data.karmaCard, collectCard, root)));
+          runVisit(data, () => { audio.flip(); renderKarmaCard(data.karmaCard, collectCard, root); }));
       } else if (scr.type === 'finale') {
         runScene(linesToScene(data.intro), () => runFinale(data));
       } else {
