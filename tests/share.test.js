@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from 'vitest';
 import { GAME_TITLE } from '../js/config.js';
-import { CARD_W, CARD_H, wrapText, drawShareCard, buildShareCard } from '../js/share.js';
+import { CARD_W, CARD_H, wrapText, drawShareCard, buildShareCard, loadArtImage } from '../js/share.js';
 
 function fakeCtx() {
   const calls = [];
@@ -62,5 +62,65 @@ describe('drawShareCard', () => {
     expect(buildShareCard(doc, payload, null)).toBeNull();
     expect(CARD_W).toBe(1080);
     expect(CARD_H).toBe(1440);
+  });
+  it('有底圖時先畫滿版底圖再壓暗色罩', () => {
+    const ctx = fakeCtx();
+    const bg = {};
+    drawShareCard(ctx, payload, null, bg);
+    const drawImageCalls = ctx.calls.filter(([n]) => n === 'drawImage');
+    expect(drawImageCalls[0]).toEqual(['drawImage', bg, 0, 0, CARD_W, CARD_H]);
+    // 壓暗色罩緊接在底圖之後：找到底圖呼叫的 index，其後應有 rgba 暗色 fillStyle + 滿版 fillRect
+    const bgIdx = ctx.calls.indexOf(drawImageCalls[0]);
+    const after = ctx.calls.slice(bgIdx + 1);
+    const overlayStyleIdx = after.findIndex(([n, v]) => n === 'fillStyle' && v === 'rgba(23, 19, 15, 0.45)');
+    expect(overlayStyleIdx).toBeGreaterThanOrEqual(0);
+    expect(after[overlayStyleIdx + 1]).toEqual(['fillRect', 0, 0, CARD_W, CARD_H]);
+  });
+  it('無底圖時維持原 ink-2 內底，不畫暗色罩', () => {
+    const ctx = fakeCtx();
+    drawShareCard(ctx, payload, null, null);
+    expect(ctx.calls.some(([n]) => n === 'drawImage')).toBe(false);
+    expect(ctx.calls.some(([n, v]) => n === 'fillStyle' && v === 'rgba(23, 19, 15, 0.45)')).toBe(false);
+    expect(ctx.calls.some(([n, ...a]) => n === 'fillRect' && a[0] === 48 && a[1] === 48)).toBe(true);
+  });
+  it('QR 移至 y=1100（避開內框底 1368）', () => {
+    const ctx = fakeCtx();
+    drawShareCard(ctx, payload, {});
+    const qrCall = ctx.calls.find(([n]) => n === 'drawImage');
+    expect(qrCall).toEqual(['drawImage', {}, CARD_W / 2 - 105, 1100, 210, 210]);
+  });
+  it('底部標語基線不侵入內框（y ≤ 1360）', () => {
+    const ctx = fakeCtx();
+    drawShareCard(ctx, payload, null, null);
+    const caption = texts(ctx).length ? ctx.calls.filter(([n]) => n === 'fillText').at(-1) : null;
+    expect(caption[0]).toBe('fillText');
+    expect(caption[1]).toBe('掃碼同遊幽冥・善書勸世');
+    expect(caption[3]).toBeLessThanOrEqual(1360);
+  });
+});
+
+describe('loadArtImage', () => {
+  function fakeDoc(behavior) {
+    return {
+      createElement: () => {
+        const img = { set src(v) { this._src = v; queueMicrotask(() => behavior(img)); } };
+        return img;
+      },
+    };
+  }
+  it('載入成功回傳 img，src 指向 assets/art/<file>', async () => {
+    let capturedSrc;
+    const doc = fakeDoc((img) => {
+      capturedSrc = img._src;
+      img.onload();
+    });
+    const img = await loadArtImage(doc, 'share-bg.webp');
+    expect(capturedSrc).toBe('assets/art/share-bg.webp');
+    expect(img).toBeTruthy();
+  });
+  it('載入失敗回傳 null', async () => {
+    const doc = fakeDoc((img) => img.onerror());
+    const img = await loadArtImage(doc, 'share-bg.webp');
+    expect(img).toBeNull();
   });
 });

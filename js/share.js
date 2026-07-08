@@ -22,11 +22,17 @@ export function wrapText(text, maxChars) {
   return lines.length ? lines : [''];
 }
 
-export function drawShareCard(ctx, { title, wu, motto }, qrImg) {
+export function drawShareCard(ctx, { title, wu, motto }, qrImg, bgImg = null) {
   ctx.fillStyle = C.ink;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
-  ctx.fillStyle = C.ink2;
-  ctx.fillRect(48, 48, CARD_W - 96, CARD_H - 96);
+  if (bgImg) {
+    ctx.drawImage(bgImg, 0, 0, CARD_W, CARD_H);
+    ctx.fillStyle = 'rgba(23, 19, 15, 0.45)'; // 壓暗保文字可讀
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+  } else {
+    ctx.fillStyle = C.ink2;
+    ctx.fillRect(48, 48, CARD_W - 96, CARD_H - 96);
+  }
   ctx.strokeStyle = C.gold;
   ctx.lineWidth = 6;
   ctx.strokeRect(48, 48, CARD_W - 96, CARD_H - 96);
@@ -64,19 +70,19 @@ export function drawShareCard(ctx, { title, wu, motto }, qrImg) {
     ctx.fillText(line, CARD_W / 2, 950 + i * 64);
   });
 
-  if (qrImg) ctx.drawImage(qrImg, CARD_W / 2 - 105, 1110, 210, 210);
+  if (qrImg) ctx.drawImage(qrImg, CARD_W / 2 - 105, 1100, 210, 210);
   ctx.fillStyle = C.paperDim;
   ctx.font = `34px ${FONT}`;
-  ctx.fillText('掃碼同遊幽冥・善書勸世', CARD_W / 2, 1382);
+  ctx.fillText('掃碼同遊幽冥・善書勸世', CARD_W / 2, 1352); // 內框底 1368 之上，解重疊
 }
 
-export function buildShareCard(doc, payload, qrImg) {
+export function buildShareCard(doc, payload, qrImg, bgImg = null) {
   const canvas = doc.createElement('canvas');
   canvas.width = CARD_W;
   canvas.height = CARD_H;
   const ctx = canvas.getContext ? canvas.getContext('2d') : null;
   if (!ctx) return null;
-  drawShareCard(ctx, payload, qrImg);
+  drawShareCard(ctx, payload, qrImg, bgImg);
   return canvas;
 }
 
@@ -86,5 +92,14 @@ export function loadQrImage(doc) {
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
     img.src = 'assets/qr.png';
+  });
+}
+
+export function loadArtImage(doc, file) {
+  return new Promise((resolve) => {
+    const img = doc.createElement('img');
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = `assets/art/${file}`;
   });
 }

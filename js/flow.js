@@ -10,7 +10,7 @@ import { renderTrialPhase, renderKarmaCard } from './ui/trialView.js';
 import { renderVisitPhase } from './ui/visitView.js';
 import { renderFinalePhase, renderShareOverlay } from './ui/finaleView.js';
 import { renderBooklet } from './ui/bookletView.js';
-import { buildShareCard, loadQrImage } from './share.js';
+import { buildShareCard, loadQrImage, loadArtImage } from './share.js';
 
 async function fetchJSON(path) {
   const res = await fetch(path);
@@ -142,10 +142,13 @@ export async function startGame({ root, loadJSON = fetchJSON, storage, audio = N
       onMengpo: (i) => { chooseMengpo(finale, i); step(); },
       onShare: async () => {
         const ending = data.endings[endingKey(state)];
-        const qr = await loadQrImage(document);
+        const [qr, bg] = await Promise.all([
+          loadQrImage(document),
+          loadArtImage(document, 'share-bg.webp'),
+        ]);
         const canvas = buildShareCard(document, {
           title: ending.title, wu: state.wu, motto: ending.motto,
-        }, qr);
+        }, qr, bg);
         renderShareOverlay(canvas, step, root);
       },
       onBooklet: () => { audio.flip(); renderBooklet(bookletEntries(), step, root); },
