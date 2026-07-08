@@ -7,7 +7,7 @@ import { renderVisitPhase } from '../js/ui/visitView.js';
 import { renderFinalePhase, renderShareOverlay } from '../js/ui/finaleView.js';
 import { createTrial, nextPhase } from '../js/engine/trial.js';
 import { createVisit, nextVisitPhase } from '../js/engine/visit.js';
-import { createFinale, nextFinalePhase } from '../js/engine/finale.js';
+import { createFinale } from '../js/engine/finale.js';
 import { createState, recordKarma, recordChoice, addWu } from '../js/state.js';
 import hall1 from '../js/data/hall1.json';
 import hall10 from '../js/data/hall10.json';

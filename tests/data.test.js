@@ -82,6 +82,7 @@ function validateFullCase(c) {
   const scores = c.persuasion.options.map((o) => o.score);
   expect([...scores].sort((a, b) => b - a)).toEqual([10, 5, 0]);
   expect(scores[0]).toBe(10); // autoplay 慣例：最佳句在第 0 位
+  expect(scores.at(-1)).toBe(0); // autoplay 慣例：末選項最惡（0 分）
   for (const o of c.persuasion.options) expect(o.reaction.length).toBeGreaterThan(0);
   if (c.react) validateReactionChoices(c.react.choices);
   if (c.postScene) validateScene(c.postScene);
@@ -153,14 +154,14 @@ function validateFinale(f) {
 // ---------- flow.json 守門 ----------
 
 describe('flow.json 驗證', () => {
-  it('id 不重複、首畫面為 prologue、末畫面為 results、src 檔案都存在', () => {
+  it('id 不重複、首畫面為 prologue、末畫面為 finale、src 檔案都存在', () => {
     const ids = flow.screens.map((s) => s.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(flow.screens[0].id).toBe('prologue');
     expect(flow.screens.at(-1).type).toBe('finale');
     for (const s of flow.screens) {
       expect(['scene', 'trial', 'visit', 'finale']).toContain(s.type);
-      if (s.type !== 'results') expect(FILES[s.src]).toBeDefined();
+      expect(FILES[s.src]).toBeDefined();
     }
   });
   it('殿的順序遞增且 type 與資料一致', () => {

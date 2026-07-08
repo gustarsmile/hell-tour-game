@@ -150,11 +150,7 @@ body {
 .card-source { display: inline-block; color: var(--azure); filter: brightness(1.7); font-size: 0.85rem; margin-bottom: 8px; }
 
 /* 結算 */
-.results { text-align: center; }
 .wu-score { color: var(--gold); font-size: 1.5rem; margin: 12px 0 4px; }
-.verdict { margin: 4px 0 16px; }
-.axis-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; margin-bottom: 16px; }
-.axis-row { margin: 0; color: var(--paper-dim); }
 
 @media (min-width: 768px) {
   #app { padding-top: 48px; }
