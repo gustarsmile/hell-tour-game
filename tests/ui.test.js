@@ -4,7 +4,7 @@ import { el, renderNode, hallLabel, renderError } from '../js/ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from '../js/ui/trialView.js';
 import { renderBooklet } from '../js/ui/bookletView.js';
 import { renderVisitPhase } from '../js/ui/visitView.js';
-import { renderFinalePhase } from '../js/ui/finaleView.js';
+import { renderFinalePhase, renderShareOverlay } from '../js/ui/finaleView.js';
 import { createTrial, nextPhase } from '../js/engine/trial.js';
 import { createVisit, nextVisitPhase } from '../js/engine/visit.js';
 import { createFinale, nextFinalePhase } from '../js/engine/finale.js';
@@ -336,5 +336,16 @@ describe('finaleView', () => {
     expect(onShare).toHaveBeenCalled();
     expect(onBooklet).toHaveBeenCalled();
     expect(onRestart).toHaveBeenCalled();
+  });
+});
+
+describe('renderShareOverlay', () => {
+  it('canvas 為 null 顯示不支援訊息；返回鈕觸發 onBack', () => {
+    const root = document.createElement('div');
+    const onBack = vi.fn();
+    renderShareOverlay(null, onBack, root);
+    expect(root.textContent).toContain('不支援');
+    [...root.querySelectorAll('button')].find((b) => b.textContent.includes('返回')).click();
+    expect(onBack).toHaveBeenCalled();
   });
 });

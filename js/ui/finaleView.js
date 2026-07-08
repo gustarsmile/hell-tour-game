@@ -93,3 +93,33 @@ export function renderFinalePhase(finale, handlers, root) {
   }
   root.appendChild(box);
 }
+
+export function renderShareOverlay(canvas, onBack, root) {
+  root.innerHTML = '';
+  const box = el('div', 'scene-box share-box');
+  box.appendChild(el('div', 'card-title', '稱 號 分 享 卡'));
+  if (!canvas) {
+    box.appendChild(el('p', 'text', '此瀏覽器不支援圖片合成，無法生成分享卡。'));
+  } else {
+    canvas.className = 'share-canvas';
+    box.appendChild(canvas);
+    let href = null;
+    try {
+      href = canvas.toDataURL('image/png');
+    } catch {
+      /* 匯出不支援時退而求其次 */
+    }
+    if (href) {
+      const a = el('a', 'btn btn-next', '下載分享卡 PNG');
+      a.href = href;
+      a.download = '幽冥之旅-稱號卡.png';
+      box.appendChild(a);
+    } else {
+      box.appendChild(el('p', 'hint', '長按圖片即可儲存分享。'));
+    }
+  }
+  const back = el('button', 'btn btn-choice', '返回 ▸');
+  back.addEventListener('click', onBack);
+  box.appendChild(back);
+  root.appendChild(box);
+}

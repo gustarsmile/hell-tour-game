@@ -4,12 +4,13 @@ import { loadBooklet, addCard } from './booklet.js';
 import { createPlayer } from './engine/scene.js';
 import { createTrial, nextPhase, spotLie, judge, react, persuade, trialScore } from './engine/trial.js';
 import { createVisit, nextVisitPhase, answerQuiz, chooseMercy, takeBranch, visitScore } from './engine/visit.js';
-import { createFinale, nextFinalePhase, chooseMengpo } from './engine/finale.js';
+import { createFinale, nextFinalePhase, chooseMengpo, endingKey } from './engine/finale.js';
 import { renderNode, el } from './ui/render.js';
 import { renderTrialPhase, renderKarmaCard } from './ui/trialView.js';
 import { renderVisitPhase } from './ui/visitView.js';
-import { renderFinalePhase } from './ui/finaleView.js';
+import { renderFinalePhase, renderShareOverlay } from './ui/finaleView.js';
 import { renderBooklet } from './ui/bookletView.js';
+import { buildShareCard, loadQrImage } from './share.js';
 
 async function fetchJSON(path) {
   const res = await fetch(path);
@@ -134,7 +135,14 @@ export async function startGame({ root, loadJSON = fetchJSON, storage }) {
     const handlers = {
       onNextPhase: () => { nextFinalePhase(finale); step(); },
       onMengpo: (i) => { chooseMengpo(finale, i); step(); },
-      onShare: () => step(), // Task 7 接真實作（分享卡）
+      onShare: async () => {
+        const ending = data.endings[endingKey(state)];
+        const qr = await loadQrImage(document);
+        const canvas = buildShareCard(document, {
+          title: ending.title, wu: state.wu, motto: ending.motto,
+        }, qr);
+        renderShareOverlay(canvas, step, root);
+      },
       onBooklet: () => renderBooklet(bookletEntries(), step, root),
       onRestart: restart,
     };

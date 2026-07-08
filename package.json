@@ -4,10 +4,12 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "dev": "python -m http.server 8000"
+    "dev": "python -m http.server 8000",
+    "gen-qr": "node scripts/gen-qr.mjs"
   },
   "devDependencies": {
     "happy-dom": "^15.11.3",
+    "qrcode": "^1.5.4",
     "vitest": "^4.1.10"
   }
 }

@@ -205,3 +205,12 @@ body {
   margin: 12px 0;
 }
 .ending-quote { border-left: 3px solid var(--vermilion); padding-left: 12px; }
+
+/* 分享卡 */
+.share-canvas {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+  margin: 12px 0;
+}
