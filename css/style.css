@@ -454,7 +454,9 @@ body {
 
   /* 封面同樣左圖右文*/
   .cover-box { display: flex; text-align: left; align-items: stretch; padding: 0; }
-  .cover-art { flex: 0 0 48%; height: auto; aspect-ratio: auto; border-right: 1px solid var(--gold-dim); }
-  .cover-body { flex: 1; padding: 32px 30px; align-self: center; }
+  /* min-width:0 是關鍵：cover-art 是 <img>，flex item 預設 min-width:auto＝圖的固有寬度，
+     會蓋過 48% 的 flex-basis，把圖撐成整框寬、擠掉右側文字。歸零後 48% 才生效。 */
+  .cover-art { flex: 0 0 48%; min-width: 0; height: auto; aspect-ratio: auto; border-right: 1px solid var(--gold-dim); }
+  .cover-body { flex: 1; min-width: 0; padding: 32px 30px; align-self: center; }
   .cover-title, .cover-subtitle { text-align: center; }
 }

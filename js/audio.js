@@ -1,4 +1,4 @@
-// WebAudio 程序化音效：木魚（點擊）、磬（答對）、翻頁（收卡）、環境音（風＋遠鐘＋鐵鍊）
+// WebAudio 程序化音效：木魚（點擊）、磬（答對）、翻頁（收卡）、環境音（風＋鐵鍊）
 // 零音檔資產；無 AudioContext（測試環境、老瀏覽器）時全部靜默 no-op。
 const KEY = 'hellTourAudio.v1';
 
@@ -91,18 +91,14 @@ export function createAudio({ storage, AC = globalThis.AudioContext } = {}) {
     const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 320;
     const g = c.createGain(); g.gain.value = 0.05;
     src.connect(lp).connect(g).connect(c.destination);
-    // 遠處誦經低韻：極低音量持續正弦
-    const drone = c.createOscillator(); drone.type = 'sine'; drone.frequency.value = 110;
-    const dg = c.createGain(); dg.gain.value = 0.012;
-    drone.connect(dg).connect(c.destination);
-    src.start(); drone.start();
+    src.start();
     const timer = setInterval(clank, 12000); // 鐵鍊遠響
-    ambient = { src, drone, timer };
+    ambient = { src, timer };
   }
 
   function stopAmbient() {
     if (!ambient) return;
-    try { ambient.src.stop(); ambient.drone.stop(); } catch { /* 忽略 */ }
+    try { ambient.src.stop(); } catch { /* 忽略 */ }
     clearInterval(ambient.timer);
     ambient = null;
   }
