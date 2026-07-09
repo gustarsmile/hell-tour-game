@@ -1,12 +1,12 @@
-import { el, NUM, hallLabel, artImg } from './render.js';
+import { el, NUM, hallLabel, artImg, sceneFrame } from './render.js';
 import { lieIndexes } from '../engine/trial.js';
 
 export function renderTrialPhase(trial, handlers, root, message = '') {
   root.innerHTML = '';
   const c = trial.caseData;
-  const box = el('div', 'scene-box trial-box');
+  const frame = sceneFrame('scene-box trial-box', c.art?.scene);
+  const box = frame.body; // 內容進右欄（窄幕時在主圖下方）
   box.appendChild(el('div', 'hall-title', `${hallLabel(c.hall)}・${c.king}`));
-  if (c.art?.scene) box.appendChild(artImg(c.art.scene));
 
   if (trial.phase === 'testimony') {
     box.appendChild(el('div', 'speaker', `罪魂 ${c.soul.name}（${c.soul.title}）供詞`));
@@ -87,7 +87,7 @@ export function renderTrialPhase(trial, handlers, root, message = '') {
     box.appendChild(el('p', 'text', c.closing));
     appendNext(box, '收下因果卡 ▸', handlers.onFinish);
   }
-  root.appendChild(box);
+  root.appendChild(frame.box);
 }
 
 function appendNext(box, label, onClick) {

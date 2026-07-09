@@ -1,5 +1,7 @@
-import { el, hallLabel, artImg } from './render.js';
+import { el, hallLabel, artImg, sceneFrame } from './render.js';
 import { endingKey, prologueReplay, journeyTally, endingQuote } from '../engine/finale.js';
+import { finalWu, rawWu, karmaPenalty } from '../state.js';
+import { GAME_TITLE, GAME_URL } from '../config.js';
 
 function appendNext(box, label, onClick) {
   const btn = el('button', 'btn btn-next', label);
@@ -19,9 +21,9 @@ export function renderFinalePhase(finale, handlers, root) {
   root.innerHTML = '';
   const d = finale.data;
   const s = finale.state;
-  const box = el('div', 'scene-box finale-box');
+  const frame = sceneFrame('scene-box finale-box', d.art?.scene);
+  const box = frame.body; // 內容進右欄（窄幕時在主圖下方）
   box.appendChild(el('div', 'hall-title', `${hallLabel(d.hall)}・${d.king}`));
-  if (d.art?.scene) box.appendChild(artImg(d.art.scene));
 
   if (finale.phase === 'mengpo') {
     appendLines(box, d.mengpo.lines);
@@ -40,7 +42,10 @@ export function renderFinalePhase(finale, handlers, root) {
     }
   } else if (finale.phase === 'wu') {
     appendLines(box, d.wuReveal.lines);
-    box.appendChild(el('p', 'wu-score', `悟性值 ${s.wu} ／ 100`));
+    box.appendChild(el('p', 'wu-score', `悟性值 ${finalWu(s)} ／ 100`));
+    const pen = karmaPenalty(s);
+    const detail = `答題修行 ${rawWu(s)}／${s.wuMax} 分${pen > 0 ? `，心性有虧扣 ${pen} 分` : '，心性無虧'}`;
+    box.appendChild(el('p', 'hint wu-detail', detail));
     box.appendChild(el('p', 'hint', d.wuReveal.note));
     appendNext(box, '領判 ▸', handlers.onNextPhase);
   } else if (finale.phase === 'mirror') {
@@ -77,11 +82,11 @@ export function renderFinalePhase(finale, handlers, root) {
     appendLines(box, finale.drank ? d.mission.drank : d.mission.kept);
     appendNext(box, '還陽 ▸', handlers.onNextPhase);
   } else if (finale.phase === 'done') {
-    box.classList.add('finale-end');
+    frame.box.classList.add('finale-end');
     const e = d.endings[endingKey(s)];
     box.appendChild(el('div', 'card-title', '此 行 判 詞'));
     box.appendChild(el('p', 'ending-title', e.title));
-    box.appendChild(el('p', 'wu-score', `悟性值 ${s.wu} ／ 100`));
+    box.appendChild(el('p', 'wu-score', `悟性值 ${finalWu(s)} ／ 100`));
     box.appendChild(el('p', 'card-lesson', `「${e.motto}」`));
     if (d.source) {
       const a = el('a', 'card-source', `結算取材：《地獄遊記》第${d.source.chapters}回`);
@@ -100,10 +105,11 @@ export function renderFinalePhase(finale, handlers, root) {
     box.appendChild(bk);
     box.appendChild(re);
   }
-  root.appendChild(box);
+  root.appendChild(frame.box);
 }
 
-export function renderShareOverlay(canvas, onBack, root) {
+// 分享卡輸出：優先走系統分享面板（手機原生「分享」），其次 blob 下載，最後長按儲存
+export function renderShareOverlay(canvas, payload, onBack, root) {
   root.innerHTML = '';
   const box = el('div', 'scene-box share-box');
   box.appendChild(el('div', 'card-title', '稱 號 分 享 卡'));
@@ -112,20 +118,38 @@ export function renderShareOverlay(canvas, onBack, root) {
   } else {
     canvas.className = 'share-canvas';
     box.appendChild(canvas);
-    let href = null;
-    try {
-      href = canvas.toDataURL('image/png');
-    } catch {
-      /* 匯出不支援時退而求其次 */
-    }
-    if (href) {
-      const a = el('a', 'btn btn-next', '下載分享卡 PNG');
-      a.href = href;
-      a.download = '幽冥之旅-稱號卡.png';
-      box.appendChild(a);
-    } else {
-      box.appendChild(el('p', 'hint', '長按圖片即可儲存分享。'));
-    }
+    const shareText = `我在《${GAME_TITLE}》獲判「${payload.title}」，悟性值 ${payload.wu}／100。${payload.motto}`;
+
+    if (typeof canvas.toBlob === 'function') canvas.toBlob((blob) => {
+      if (blob) {
+        // 手機系統分享面板：可直接傳圖到 LINE／IG 等
+        const file = new File([blob], '幽冥之旅-稱號卡.png', { type: 'image/png' });
+        if (navigator.canShare?.({ files: [file] })) {
+          const shareBtn = el('button', 'btn btn-next', '分享結果');
+          shareBtn.addEventListener('click', () => {
+            navigator.share({ files: [file], title: GAME_TITLE, text: shareText })
+              .catch(() => { /* 使用者取消分享，不當錯誤 */ });
+          });
+          box.insertBefore(shareBtn, hint);
+        }
+        // blob 連結比 dataURL 可靠（大圖 dataURL 在部分手機瀏覽器點了沒反應）
+        const a = el('a', 'btn btn-choice', '下載分享卡 PNG');
+        a.href = URL.createObjectURL(blob);
+        a.download = '幽冥之旅-稱號卡.png';
+        box.insertBefore(a, hint);
+      }
+      if (!blob && navigator.share) {
+        const textBtn = el('button', 'btn btn-next', '分享結果（文字）');
+        textBtn.addEventListener('click', () => {
+          navigator.share({ title: GAME_TITLE, text: shareText, url: GAME_URL })
+            .catch(() => { /* 使用者取消分享 */ });
+        });
+        box.insertBefore(textBtn, hint);
+      }
+    }, 'image/png');
+
+    const hint = el('p', 'hint', '手機亦可長按上圖，直接儲存或分享。');
+    box.appendChild(hint);
   }
   const back = el('button', 'btn btn-choice', '返回 ▸');
   back.addEventListener('click', onBack);

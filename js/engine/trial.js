@@ -25,6 +25,13 @@ export function nextPhase(trial) {
   return trial.phase;
 }
 
+// 回上一階段重看（計分函式皆有防重入守衛，倒退不會重複計分）
+export function prevPhase(trial) {
+  const i = trial.phases.indexOf(trial.phase);
+  if (i > 0) trial.phase = trial.phases[i - 1];
+  return trial.phase;
+}
+
 export function lieIndexes(caseData) {
   return caseData.testimony
     .map((s, i) => (s.lie ? i : -1))

@@ -27,6 +27,18 @@ export function nextVisitPhase(visit) {
   return visit.phase;
 }
 
+// 回上一階段重看；支線已走過（接受）時再往前跳一格，避免落在空畫面
+export function prevVisitPhase(visit) {
+  let i = visit.phases.indexOf(visit.phase);
+  while (i > 0) {
+    i -= 1;
+    if (visit.phases[i] === 'branch' && visit.branchTaken === true) continue;
+    visit.phase = visit.phases[i];
+    return visit.phase;
+  }
+  return visit.phase;
+}
+
 export function answerQuiz(visit, index) {
   if (visit.phase !== 'ask' || !visit.data.quiz) throw new Error('目前不在考題階段');
   if (visit.quizPoints !== null) return { correct: true, points: visit.quizPoints };

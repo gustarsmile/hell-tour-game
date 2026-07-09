@@ -29,7 +29,7 @@ body {
 #app {
   max-width: 480px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 64px 16px 48px; /* 上方留給固定導覽列 */
 }
 
 /* 場景框：狀紙／卷軸 */
@@ -39,6 +39,20 @@ body {
   background: linear-gradient(180deg, var(--ink-2), #1d1710);
   padding: 20px 18px;
   box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.06), 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* 框架版場景：主圖 .scene-art ＋ 內容 .scene-body（窄幕上下疊、寬幕左圖右文） */
+.scene-box.framed { padding: 0; overflow: hidden; }
+.scene-body { padding: 20px 18px; min-width: 0; }
+.scene-art { line-height: 0; }
+.scene-art .art-banner {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  aspect-ratio: 1024 / 683; /* 先保留版位，圖到位不推擠文字 */
+  object-fit: cover;
+  background: var(--ink-2);
 }
 
 .speaker {
@@ -151,10 +165,7 @@ body {
 
 /* 結算 */
 .wu-score { color: var(--gold); font-size: 1.5rem; margin: 12px 0 4px; }
-
-@media (min-width: 768px) {
-  #app { padding-top: 48px; }
-}
+.wu-detail { margin-bottom: 4px; }
 
 /* ===== 見聞殿（階段2） ===== */
 .visit-box .hall-title { letter-spacing: 0.15em; }
@@ -211,12 +222,15 @@ body {
   margin: 12px 0;
 }
 
-/* 插圖 */
+/* 插圖：先以長寬比保留版位，圖到位不推擠文字 */
 .art-banner {
   display: block;
   width: calc(100% + 36px);
   margin: -20px -18px 14px;
   border-radius: 6px 6px 0 0;
+  aspect-ratio: 1024 / 683;
+  object-fit: cover;
+  background: var(--ink-2);
 }
 .art-portrait {
   display: block;
@@ -224,26 +238,66 @@ body {
   margin: 0 auto 14px;
   border: 1px solid var(--gold-dim);
   border-radius: 6px;
+  aspect-ratio: 683 / 1024;
+  object-fit: cover;
+  background: var(--ink-2);
 }
-.art-mirror, .art-watch, .art-ending {
+.art-mirror, .art-watch {
   display: block;
   width: 100%;
   border-radius: 4px;
   margin-bottom: 8px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--ink-2);
+}
+.art-ending {
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  aspect-ratio: 1024 / 683;
+  object-fit: cover;
+  background: var(--ink-2);
 }
 .art-figure {
   display: block;
   width: 48%;
   margin: 0 auto 12px;
   border-radius: 6px;
+  aspect-ratio: 683 / 1024;
+  object-fit: cover;
+  background: var(--ink-2);
 }
 
-/* 音效開關 */
+/* ===== 固定導覽：左上返回＋選單、右上音效 ===== */
+#nav-bar {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+}
+.nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-dim);
+  background: rgba(23, 19, 15, 0.8);
+  color: var(--gold);
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.nav-btn:disabled { opacity: 0.35; cursor: default; }
+
 #audio-toggle {
   position: fixed;
   top: 10px;
   right: 10px;
-  z-index: 10;
+  z-index: 20;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -253,4 +307,154 @@ body {
   font: inherit;
   font-size: 0.85rem;
   cursor: pointer;
+}
+
+/* 遊歷選單（漢堡） */
+#nav-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+}
+#nav-overlay.open { display: block; }
+#nav-menu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(320px, 88vw);
+  overflow-y: auto;
+  background: linear-gradient(180deg, var(--ink-2), #1d1710);
+  border-right: 1px solid var(--gold-dim);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.6);
+  padding: 16px 14px 24px;
+}
+.menu-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.menu-title { color: var(--gold); font-size: 1.1rem; letter-spacing: 0.3em; flex: 1; }
+.menu-mode {
+  color: var(--paper-dim);
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  font-size: 0.75rem;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+.menu-close {
+  border: none;
+  background: transparent;
+  color: var(--paper-dim);
+  font: inherit;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.menu-section {
+  color: var(--vermilion);
+  filter: brightness(1.35);
+  letter-spacing: 0.2em;
+  font-size: 0.9rem;
+  margin: 14px 0 4px;
+  border-bottom: 1px solid var(--vermilion-dim);
+  padding-bottom: 4px;
+}
+.menu-hint { color: var(--paper-dim); font-size: 0.78rem; margin: 4px 0 6px; }
+.menu-hall.current { border-color: var(--gold); background: rgba(201, 162, 39, 0.08); }
+.menu-hall-title { display: block; color: var(--gold); font-size: 0.95rem; }
+.menu-hall-desc { display: block; color: var(--paper-dim); font-size: 0.8rem; line-height: 1.5; }
+.menu-action { font-size: 0.95rem; }
+
+/* 提示浮層 */
+#nav-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 40;
+  background: rgba(23, 19, 15, 0.92);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+}
+#nav-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* 善書冊疊層（選單開啟，不打斷當前殿進度） */
+#booklet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.75);
+  overflow-y: auto;
+  padding: 24px 16px 48px;
+}
+.booklet-overlay-inner { max-width: 480px; margin: 0 auto; }
+
+/* ===== 入口封面 ===== */
+.cover-box { padding: 0; overflow: hidden; text-align: center; }
+.cover-art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1024 / 683;
+  object-fit: cover;
+  background: var(--ink-2);
+}
+.cover-body { padding: 20px 18px 26px; }
+.cover-title {
+  color: var(--gold);
+  font-size: 2rem;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  margin-top: 4px;
+}
+.cover-subtitle {
+  color: var(--vermilion);
+  filter: brightness(1.4);
+  font-size: 1.1rem;
+  letter-spacing: 0.6em;
+  text-indent: 0.6em;
+  margin: 2px 0 10px;
+}
+.cover-tagline { color: var(--paper-dim); font-size: 0.9rem; margin: 0 0 16px; }
+.cover-btn { text-align: center; }
+.cover-btn .opt-name { margin-bottom: 2px; }
+.cover-hint { margin-top: 16px; }
+
+/* ===== 平板／桌機：左圖右文 ===== */
+@media (min-width: 768px) {
+  #app { padding-top: 72px; }
+}
+
+@media (min-width: 900px) {
+  #app { max-width: 960px; }
+
+  /* 無主圖的卡片維持窄欄置中，閱讀行寬不失控 */
+  .scene-box:not(.with-art):not(.cover-box),
+  .booklet-overlay-inner { max-width: 540px; margin-left: auto; margin-right: auto; }
+
+  .scene-box.with-art { display: flex; align-items: stretch; }
+  .scene-box.with-art > .scene-art {
+    flex: 0 0 44%;
+    border-right: 1px solid var(--gold-dim);
+    background: var(--ink-2);
+  }
+  .scene-box.with-art > .scene-art .art-banner {
+    position: sticky;
+    top: 0;
+    height: auto;
+    border-radius: 0;
+  }
+  .scene-box.with-art > .scene-body {
+    flex: 1;
+    padding: 24px 26px 28px;
+  }
+
+  /* 封面同樣左圖右文*/
+  .cover-box { display: flex; text-align: left; align-items: stretch; padding: 0; }
+  .cover-art { flex: 0 0 48%; height: auto; aspect-ratio: auto; border-right: 1px solid var(--gold-dim); }
+  .cover-body { flex: 1; padding: 32px 30px; align-self: center; }
+  .cover-title, .cover-subtitle { text-align: center; }
 }

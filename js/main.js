@@ -2,9 +2,11 @@ import { startGame } from './flow.js';
 import { renderError, el } from './ui/render.js';
 import { clearSave } from './state.js';
 import { createAudio } from './audio.js';
+import { createNav } from './ui/nav.js';
 
 const root = document.getElementById('app');
 const audio = createAudio();
+const nav = createNav();
 
 document.addEventListener('pointerdown', function once() {
   document.removeEventListener('pointerdown', once);
@@ -20,6 +22,6 @@ mute.setAttribute('aria-label', '音效開關');
 mute.addEventListener('click', () => { mute.textContent = audio.toggle() ? '音' : '靜'; });
 document.body.appendChild(mute);
 
-startGame({ root, audio }).catch((err) => {
+startGame({ root, audio, nav }).catch((err) => {
   renderError(err, () => { clearSave(); location.reload(); }, root);
 });

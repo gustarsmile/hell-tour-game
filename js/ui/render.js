@@ -9,22 +9,35 @@ export function artImg(file, className = 'art-banner') {
   const img = el('img', className);
   img.src = `assets/art/${file}`;
   img.alt = '';
-  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.loading = className === 'art-banner' ? 'eager' : 'lazy'; // 主圖立即載，避免文字先出圖後跳
   img.addEventListener('error', () => img.remove()); // 資產缺失時優雅降級
   return img;
 }
 
+// 場景框：主圖放 .scene-art、內容放 .scene-body——窄幕上下疊、寬幕左圖右文
+export function sceneFrame(className, artFile) {
+  const box = el('div', `${className} framed${artFile ? ' with-art' : ''}`);
+  if (artFile) {
+    const aside = el('div', 'scene-art');
+    aside.appendChild(artImg(artFile));
+    box.appendChild(aside);
+  }
+  const body = el('div', 'scene-body');
+  box.appendChild(body);
+  return { box, body };
+}
+
 export function renderNode(node, handlers, root, opts = {}) {
   root.innerHTML = '';
-  const box = el('div', 'scene-box');
-  if (opts.art) box.appendChild(artImg(opts.art));
-  if (node.speaker) box.appendChild(el('div', 'speaker', node.speaker));
-  box.appendChild(el('p', 'text', node.text));
-  if (node.img) box.appendChild(artImg(node.img, 'art-figure'));
+  const { box, body } = sceneFrame('scene-box', opts.art);
+  if (node.speaker) body.appendChild(el('div', 'speaker', node.speaker));
+  body.appendChild(el('p', 'text', node.text));
+  if (node.img) body.appendChild(artImg(node.img, 'art-figure'));
   if (node.type === 'line') {
     const btn = el('button', 'btn btn-next', '繼續 ▸');
     btn.addEventListener('click', handlers.onAdvance);
-    box.appendChild(btn);
+    body.appendChild(btn);
   } else if (node.type === 'choice') {
     const list = el('div', 'choices');
     node.choices.forEach((c, i) => {
@@ -32,7 +45,7 @@ export function renderNode(node, handlers, root, opts = {}) {
       btn.addEventListener('click', () => handlers.onChoose(i));
       list.appendChild(btn);
     });
-    box.appendChild(list);
+    body.appendChild(list);
   }
   root.appendChild(box);
 }

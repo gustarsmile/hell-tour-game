@@ -9,12 +9,19 @@ export function createPlayer(scene, hooks = {}) {
   }
 
   let current = nodeOf(scene.start);
+  const history = []; // 僅記走過的 line 節點；跨過 choice 即清空（返回不得改選，避免重複記心性）
 
   return {
     current: () => current,
     isEnded: () => current.type === 'end',
+    canBack: () => history.length > 0,
+    back() {
+      if (history.length) current = nodeOf(history.pop());
+      return current;
+    },
     advance() {
       if (current.type !== 'line') throw new Error('advance() 僅適用於 line 節點');
+      history.push(current.id);
       current = nodeOf(current.next);
       return current;
     },
@@ -35,6 +42,7 @@ export function createPlayer(scene, hooks = {}) {
           weight,
         });
       }
+      history.length = 0;
       current = nodeOf(choice.next);
       return current;
     },

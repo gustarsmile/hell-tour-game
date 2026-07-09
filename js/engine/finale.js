@@ -1,5 +1,5 @@
 import { WU_THRESHOLD, PROLOGUE_ID } from '../config.js';
-import { karmaVerdict } from '../state.js';
+import { karmaVerdict, finalWu } from '../state.js';
 
 const PHASES = ['mengpo', 'wu', 'mirror', 'ending', 'mission', 'done'];
 
@@ -10,6 +10,12 @@ export function createFinale(data, state) {
 export function nextFinalePhase(finale) {
   const i = finale.phases.indexOf(finale.phase);
   finale.phase = finale.phases[Math.min(i + 1, finale.phases.length - 1)];
+  return finale.phase;
+}
+
+export function prevFinalePhase(finale) {
+  const i = finale.phases.indexOf(finale.phase);
+  if (i > 0) finale.phase = finale.phases[i - 1];
   return finale.phase;
 }
 
@@ -24,18 +30,18 @@ export function chooseMengpo(finale, index) {
 }
 
 export function endingKey(state) {
-  const high = state.wu >= WU_THRESHOLD;
+  const high = finalWu(state) >= WU_THRESHOLD;
   const good = karmaVerdict(state) === 'good';
   if (high) return good ? 'highGood' : 'highBad';
   return good ? 'lowGood' : 'lowBad';
 }
 
 export function prologueReplay(state) {
-  return state.choices.filter((c) => c.scene === PROLOGUE_ID);
+  return state.choices.filter((c) => c.screen === PROLOGUE_ID);
 }
 
 export function journeyTally(state) {
-  const rest = state.choices.filter((c) => c.scene !== PROLOGUE_ID);
+  const rest = state.choices.filter((c) => c.screen !== PROLOGUE_ID);
   return {
     good: rest.filter((c) => c.delta > 0).length,
     evil: rest.filter((c) => c.delta < 0).length,

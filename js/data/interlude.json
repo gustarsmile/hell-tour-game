@@ -3,18 +3,54 @@
   "art": "interlude-scene.webp",
   "start": "i1",
   "nodes": [
-    { "id": "i1", "type": "line", "speaker": "旁白",
-      "text": "恍惚間，你飄了起來。回頭一看——床上躺著的，竟是你自己。", "next": "i2" },
-    { "id": "i2", "type": "line", "speaker": "？？？",
-      "text": "「莫慌、莫慌。你陽壽未盡，只是魂魄暫離罷了。哈哈哈！」", "next": "i3" },
-    { "id": "i3", "type": "line", "speaker": "旁白",
-      "text": "一位身穿破袈裟、手搖破蒲扇的和尚，不知何時站在了你面前，笑得一臉狡黠。", "next": "i4" },
-    { "id": "i4", "type": "line", "speaker": "濟公", "img": "jigong-main.webp",
-      "text": "「貧僧濟公是也。今夜奉旨，帶你走一趟陰曹地府。」", "next": "i5" },
-    { "id": "i5", "type": "line", "speaker": "濟公",
-      "text": "「你且做我的見習記錄生——把地府的見聞一一記下，他日還陽，好勸化世人。」", "next": "i6" },
-    { "id": "i6", "type": "line", "speaker": "濟公",
-      "text": "「前面就是鬼門關了。跟緊貧僧，莫要東張西望！」", "next": "fin" },
-    { "id": "fin", "type": "end" }
-  ]
+    {
+      "id": "i1",
+      "type": "line",
+      "speaker": "旁白",
+      "text": "恍惚間，你飄了起來。回頭一看——床上躺著的，竟是你自己。",
+      "next": "i2"
+    },
+    {
+      "id": "i2",
+      "type": "line",
+      "speaker": "？？？",
+      "text": "「莫慌、莫慌。你陽壽未盡，只是魂魄暫離罷了。哈哈哈！」",
+      "next": "i3"
+    },
+    {
+      "id": "i3",
+      "type": "line",
+      "speaker": "旁白",
+      "text": "一位身穿破袈裟、手搖破蒲扇的和尚，不知何時站在了你面前，笑得一臉狡黠。",
+      "next": "i4"
+    },
+    {
+      "id": "i4",
+      "type": "line",
+      "speaker": "濟公",
+      "img": "jigong-main.webp",
+      "text": "「貧僧濟公是也。今夜奉旨，帶你走一趟陰曹地府。」",
+      "next": "i5"
+    },
+    {
+      "id": "i5",
+      "type": "line",
+      "speaker": "濟公",
+      "text": "「你且做我的見習記錄生——把地府的見聞一一記下，他日還陽，好勸化世人。」",
+      "next": "i6"
+    },
+    {
+      "id": "i6",
+      "type": "line",
+      "speaker": "濟公",
+      "text": "「前面就是鬼門關了。跟緊貧僧，莫要東張西望！」",
+      "next": "fin"
+    },
+    {
+      "id": "fin",
+      "type": "end"
+    }
+  ],
+  "menuTitle": "過場・魂遊地府",
+  "tagline": "濟公引路，鬼門關前啟程"
 }

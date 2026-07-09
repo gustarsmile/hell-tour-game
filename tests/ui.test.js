@@ -8,7 +8,7 @@ import { renderFinalePhase, renderShareOverlay } from '../js/ui/finaleView.js';
 import { createTrial, nextPhase } from '../js/engine/trial.js';
 import { createVisit, nextVisitPhase } from '../js/engine/visit.js';
 import { createFinale } from '../js/engine/finale.js';
-import { createState, recordKarma, recordChoice, addWu } from '../js/state.js';
+import { createState, recordChoice, creditWu } from '../js/state.js';
 import hall1 from '../js/data/hall1.json';
 import hall10 from '../js/data/hall10.json';
 
@@ -292,10 +292,11 @@ describe('bookletView', () => {
 
 describe('finaleView', () => {
   function readyState() {
+    // 折算 88 分 − 一筆序章惡選（權重2）扣 8 分 → 悟性 80、心性 −2 → highBad
     const s = createState();
-    addWu(s, 80);
-    recordChoice(s, { scene: 'prologue', label: '早市多找的錢', text: '收進口袋——是他自己找錯的', axis: 'honesty', delta: -1, weight: 2 });
-    recordKarma(s, 'honesty', -1, 2);
+    s.wuMax = 100;
+    creditWu(s, 'x', 88);
+    recordChoice(s, { screen: 'prologue', scene: 'prologue', label: '早市多找的錢', text: '收進口袋——是他自己找錯的', axis: 'honesty', delta: -1, weight: 2 });
     return s;
   }
   it('mengpo 未選時渲染兩選項；選後顯示 reply 與繼續鈕', () => {
@@ -365,7 +366,7 @@ describe('renderShareOverlay', () => {
   it('canvas 為 null 顯示不支援訊息；返回鈕觸發 onBack', () => {
     const root = document.createElement('div');
     const onBack = vi.fn();
-    renderShareOverlay(null, onBack, root);
+    renderShareOverlay(null, { title: 't', wu: 80, motto: 'm' }, onBack, root);
     expect(root.textContent).toContain('不支援');
     [...root.querySelectorAll('button')].find((b) => b.textContent.includes('返回')).click();
     expect(onBack).toHaveBeenCalled();

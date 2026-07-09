@@ -1,16 +1,74 @@
 {
   "screens": [
-    { "id": "prologue", "type": "scene", "src": "prologue.json" },
-    { "id": "interlude", "type": "scene", "src": "interlude.json" },
-    { "id": "hall1", "type": "trial", "src": "hall1.json" },
-    { "id": "hall2", "type": "visit", "src": "hall2.json" },
-    { "id": "hall3", "type": "trial", "src": "hall3.json" },
-    { "id": "hall4", "type": "visit", "src": "hall4.json" },
-    { "id": "hall5", "type": "trial", "src": "hall5.json" },
-    { "id": "hall6", "type": "visit", "src": "hall6.json" },
-    { "id": "hall7", "type": "trial", "src": "hall7.json" },
-    { "id": "hall8", "type": "visit", "src": "hall8.json" },
-    { "id": "hall9", "type": "visit", "src": "hall9.json" },
-    { "id": "hall10", "type": "finale", "src": "hall10.json" }
-  ]
+    {
+      "id": "prologue",
+      "type": "scene",
+      "src": "prologue.json"
+    },
+    {
+      "id": "interlude",
+      "type": "scene",
+      "src": "interlude.json"
+    },
+    {
+      "id": "hall1",
+      "type": "trial",
+      "src": "hall1.json"
+    },
+    {
+      "id": "hall2",
+      "type": "visit",
+      "src": "hall2.json"
+    },
+    {
+      "id": "hall3",
+      "type": "trial",
+      "src": "hall3.json"
+    },
+    {
+      "id": "hall4",
+      "type": "visit",
+      "src": "hall4.json"
+    },
+    {
+      "id": "hall5",
+      "type": "trial",
+      "src": "hall5.json"
+    },
+    {
+      "id": "hall6",
+      "type": "visit",
+      "src": "hall6.json"
+    },
+    {
+      "id": "hall7",
+      "type": "trial",
+      "src": "hall7.json"
+    },
+    {
+      "id": "hall8",
+      "type": "visit",
+      "src": "hall8.json"
+    },
+    {
+      "id": "hall9",
+      "type": "visit",
+      "src": "hall9.json"
+    },
+    {
+      "id": "hall10",
+      "type": "finale",
+      "src": "hall10.json"
+    }
+  ],
+  "modes": {
+    "lite": [
+      "prologue",
+      "interlude",
+      "hall1",
+      "hall2",
+      "hall5",
+      "hall10"
+    ]
+  }
 }

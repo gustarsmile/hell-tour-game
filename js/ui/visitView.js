@@ -1,11 +1,11 @@
-import { el, hallLabel, artImg } from './render.js';
+import { el, hallLabel, artImg, sceneFrame } from './render.js';
 
 export function renderVisitPhase(visit, handlers, root, message = '') {
   root.innerHTML = '';
   const d = visit.data;
-  const box = el('div', 'scene-box visit-box');
+  const frame = sceneFrame('scene-box visit-box', d.art?.scene);
+  const box = frame.body; // 內容進右欄（窄幕時在主圖下方）
   box.appendChild(el('div', 'hall-title', `${hallLabel(d.hall)}・${d.king}`));
-  if (d.art?.scene) box.appendChild(artImg(d.art.scene));
 
   if (visit.phase === 'watch') {
     box.appendChild(el('div', 'speaker', d.watch.title));
@@ -66,7 +66,7 @@ export function renderVisitPhase(visit, handlers, root, message = '') {
     box.appendChild(el('p', 'text', d.closing));
     appendNext(box, '收下因果卡 ▸', handlers.onFinish);
   }
-  root.appendChild(box);
+  root.appendChild(frame.box);
 }
 
 function appendNext(box, label, onClick) {
