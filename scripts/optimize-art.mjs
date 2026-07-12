@@ -13,7 +13,7 @@ for (const f of readdirSync(SRC).filter((n) => n.endsWith('.png'))) {
 }
 // 社群分享預覽圖（og:image 用，Task 9 引用；palette PNG 壓縮避免 LINE/FB 爬蟲抓圖過重被跳過）
 // quality:80 仍達 574KB，超過 500KB 守門；降至 60 並拉高壓縮層級後為 432KB，留有餘裕
-await sharp(`${SRC}/hall1-scene.png`)
+await sharp(`${SRC}/cover.png`)
   .resize(1200, 630, { fit: 'cover' })
   .png({ palette: true, quality: 60, compressionLevel: 9, effort: 10 })
   .toFile('assets/og.png');
