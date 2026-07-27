@@ -130,6 +130,22 @@ describe('layer.js', () => {
     expect(window.history.pushState).toHaveBeenCalledTimes(1); // 關鍵：只推了一筆
   });
 
+  it('巢狀時返回鍵逐層關閉：關掉頂層後為下層補推歷程', () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    pushLayer(outer);
+    pushLayer(inner);
+    expect(window.history.pushState).toHaveBeenCalledTimes(1); // 兩層只持有一筆
+    fireBack();
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+    expect(layerDepth()).toBe(1);
+    expect(window.history.pushState).toHaveBeenCalledTimes(2); // 為下層補推
+    fireBack();
+    expect(outer).toHaveBeenCalledTimes(1);
+    expect(layerDepth()).toBe(0);
+  });
+
   it('back 回音在途期間開新層，回音抵達時補推歷程', async () => {
     pushLayer(() => {}).close();
     await Promise.resolve(); // 讓對帳的 microtask 跑完，此時 back() 已呼叫、popstate 尚未到
