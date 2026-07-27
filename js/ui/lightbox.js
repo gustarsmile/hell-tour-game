@@ -4,7 +4,6 @@ import { pushLayer } from './layer.js';
 let overlay = null;
 let bigImg = null;
 let layer = null;
-let prevOverflow = '';
 
 function ensureOverlay(doc) {
   if (overlay) return;
@@ -37,8 +36,12 @@ function ensureOverlay(doc) {
 export function openLightbox(src, doc = document) {
   ensureOverlay(doc);
   bigImg.src = src;
+  // 已開啟時只換圖：重複推疊層會讓原始捲動狀態被 'hidden' 覆蓋而永久遺失，
+  // 且會在 layer.js 堆疊裡留下無人消耗的殘層，破壞單層不變式
+  if (layer) return;
   overlay.classList.add('open');
-  prevOverflow = doc.body.style.overflow;
+  // 以區域變數捕獲，讓 closure 持有屬於這一次開啟的值，不受後續開啟影響
+  const prevOverflow = doc.body.style.overflow;
   doc.body.style.overflow = 'hidden';
   layer = pushLayer(() => {
     overlay.classList.remove('open');
