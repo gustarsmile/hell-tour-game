@@ -14,6 +14,7 @@ import { renderFinalePhase, renderShareOverlay } from './ui/finaleView.js';
 import { renderBooklet } from './ui/bookletView.js';
 import { renderCover } from './ui/coverView.js';
 import { NOOP_NAV } from './ui/nav.js';
+import { pushLayer } from './ui/layer.js';
 import { buildShareCard, loadQrImage, loadArtImage } from './share.js';
 import { collectArtFiles, preloadArt } from './preload.js';
 
@@ -211,7 +212,8 @@ export async function startGame({ root, loadJSON = fetchJSON, storage, audio = N
     const inner = el('div', 'booklet-overlay-inner');
     overlay.appendChild(inner);
     document.body.appendChild(overlay);
-    renderBooklet(bookletEntries(), () => overlay.remove(), inner);
+    const layer = pushLayer(() => overlay.remove());
+    renderBooklet(bookletEntries(), () => layer.close(), inner);
   }
 
   function runFinale(data) {

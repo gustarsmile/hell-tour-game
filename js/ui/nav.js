@@ -1,4 +1,5 @@
 import { el } from './render.js';
+import { pushLayer } from './layer.js';
 
 // 頂欄導覽：左上「返回上一頁」與「遊歷選單」，全程常駐（音效鈕在右上，由 main.js 掛載）
 export function createNav(doc = document) {
@@ -30,13 +31,20 @@ export function createNav(doc = document) {
   backBtn.addEventListener('click', () => onBack?.());
   menuBtn.addEventListener('click', () => (overlay.classList.contains('open') ? close() : open()));
 
+  let layer = null;
+
   function close() {
-    overlay.classList.remove('open');
+    layer?.close();
+    layer = null;
   }
 
   function open() {
     renderPanel();
     overlay.classList.add('open');
+    layer = pushLayer(() => {
+      overlay.classList.remove('open');
+      layer = null;
+    }, doc);
   }
 
   function menuAction(label, fn, cls = 'menu-action') {
