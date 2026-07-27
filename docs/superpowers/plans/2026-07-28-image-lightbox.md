@@ -33,7 +33,7 @@
 | `js/ui/nav.js` | 改 | 選單 `open()`／`close()` 改走 layer handle |
 | `js/flow.js` | 改 | `openBookletOverlay()` 改走 layer handle |
 | `css/style.css` | 改 | 附加大圖疊層樣式 |
-| `tests/layer.test.js` | 新增 | layer.js 的 10 個關閉語意案例（單元） |
+| `tests/layer.test.js` | 新增 | layer.js 的 11 個關閉語意案例（單元） |
 | `tests/lightbox.test.js` | 新增 | 大圖疊層 12 案例 |
 | `tests/overlays.test.js` | 新增 | 漢堡選單 4 案例＋善書冊 5 案例（整合）。**獨立成檔**：這些測試會清掉 body 內的疊層節點，與 lightbox 單例共處一檔會造成跨測試污染 |
 
@@ -189,6 +189,22 @@ describe('layer.js', () => {
     expect(window.history.pushState).toHaveBeenCalledTimes(1); // 關鍵：只推了一筆
   });
 
+  it('巢狀時返回鍵逐層關閉：關掉頂層後為下層補推歷程', () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    pushLayer(outer);
+    pushLayer(inner);
+    expect(window.history.pushState).toHaveBeenCalledTimes(1); // 兩層只持有一筆
+    fireBack();
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+    expect(layerDepth()).toBe(1);
+    expect(window.history.pushState).toHaveBeenCalledTimes(2); // 為下層補推
+    fireBack();
+    expect(outer).toHaveBeenCalledTimes(1);
+    expect(layerDepth()).toBe(0);
+  });
+
   it('back 回音在途期間開新層，回音抵達時補推歷程', async () => {
     pushLayer(() => {}).close();
     await Promise.resolve(); // 讓對帳的 microtask 跑完，此時 back() 已呼叫、popstate 尚未到
@@ -257,7 +273,12 @@ function onPopstate() {
     return;
   }
   held = false; // 瀏覽器已替我們退掉那筆
-  if (stack.length) dismiss(stack[stack.length - 1]);
+  if (!stack.length) return;
+  dismiss(stack[stack.length - 1]);
+  // 若下層仍開著，補推一筆讓返回鍵也能逐層關掉。本 app 目前無巢狀，
+  // 但 artImg() 會自動為圖片掛上大圖疊層，日後只要有人在選單或善書冊裡放一張圖
+  // 就會出現巢狀；少了這行，第二次按返回鍵會直接退出遊戲。
+  if (stack.length) pushEntry(win);
 }
 
 // 對帳延到 microtask 執行：close(); fn(); 這種同一輪內關舊層又開新層的路徑，
@@ -315,12 +336,12 @@ export function resetLayers() {
 - [ ] **Step 4: 執行測試確認通過**
 
 Run: `npm test -- tests/layer.test.js`
-Expected: PASS，10 passed
+Expected: PASS，11 passed
 
 - [ ] **Step 5: 執行全套測試確認無回歸**
 
 Run: `npm test`
-Expected: 172 passed（162 + 10）
+Expected: 173 passed（162 + 11）
 
 - [ ] **Step 6: Commit**
 
@@ -654,7 +675,7 @@ Expected: PASS，12 passed
 - [ ] **Step 8: 執行全套測試確認無回歸**
 
 Run: `npm test`
-Expected: 184 passed（172 + 12）。特別確認 `tests/ui.test.js` 與 `tests/html.test.js` 仍全過。
+Expected: 185 passed（173 + 12）。特別確認 `tests/ui.test.js` 與 `tests/html.test.js` 仍全過。
 
 - [ ] **Step 9: Commit**
 
@@ -891,7 +912,7 @@ Expected: PASS，9 passed（4 選單 + 5 善書冊）
 - [ ] **Step 6: 執行全套測試確認無回歸**
 
 Run: `npm test`
-Expected: 193 passed（184 + 9），18 個測試檔。特別確認 `tests/flow.test.js` 全過。
+Expected: 194 passed（185 + 9），18 個測試檔。特別確認 `tests/flow.test.js` 全過。
 
 - [ ] **Step 7: Commit**
 
@@ -1016,7 +1037,7 @@ import { pushLayer } from './ui/layer.js';
 - [ ] **Step 6: 執行全套測試**
 
 Run: `npm test`
-Expected: 198 passed（167 + 10 + 12 + 9），18 個測試檔
+Expected: 199 passed（167 + 11 + 12 + 9），18 個測試檔
 
 **family 專屬風險**：`js/ui/coverView.js` 的封面標題文字若被 Step 1 誤複製覆蓋，`tests/html.test.js` 或既有封面測試會失敗。若出現此類失敗，先 `git diff js/ui/coverView.js` 確認三行文字是否被改成 game 版。
 
