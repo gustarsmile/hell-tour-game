@@ -130,7 +130,7 @@ export function enableLightbox(img)
 - 檔案分歧情形已逐一 diff 查核（2026-07-28）：`js/ui/render.js` 與 `js/ui/nav.js` 兩 repo **逐字相同**；`js/ui/coverView.js` 僅封面標題／副標／tagline 三行文字不同，**`cover-art` 建立段落相同**；`js/flow.js` 整體已分歧（family 多序章換景與回天看樹），但 `openBookletOverlay` 一段相同。無共用套件機制，同一份改動各套一次。
 - `js/ui/layer.js`、`js/ui/lightbox.js` 為新檔，兩 repo 各放一份相同內容。
 - `css/style.css` 兩 repo 已分歧（family 多天堂主題），新樣式各自附加於疊層區塊之後；疊層底色為中性黑，兩主題通用。
-- `tests/layer.test.js`、`tests/lightbox.test.js` 為新檔，兩 repo 各放一份相同內容。
+- `tests/layer.test.js`、`tests/lightbox.test.js`、`tests/overlays.test.js` 為新檔，兩 repo 各放一份相同內容。既有疊層的測試獨立成 `overlays.test.js`（不併入 `lightbox.test.js`）：這些測試需清除 body 內的疊層節點，與大圖疊層的模組單例共處一檔會造成跨測試污染。
 
 ## H. 測試策略
 
