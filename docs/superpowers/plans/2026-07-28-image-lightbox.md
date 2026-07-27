@@ -810,7 +810,7 @@ describe('善書冊接入 layer', () => {
     expect(bookletOpen()).toBe(false);
   });
 
-  it('經選單開啟善書冊後仍在畫面上（pendingBacks 端到端）', async () => {
+  it('經選單開啟善書冊後仍在畫面上（歷程對帳端到端）', async () => {
     const cfg = await bootFlow();
     // 重現 nav.js 的 menuAction：close(); fn(); ——關選單與開善書冊在同一輪同步發生
     mountNav({ onBooklet: cfg.onBooklet });
@@ -820,7 +820,7 @@ describe('善書冊接入 layer', () => {
     expect(bookletOpen()).toBe(true);
     await flush();
     await flush();
-    expect(bookletOpen()).toBe(true); // 關選單那次 back() 的回音不得關掉善書冊
+    expect(bookletOpen()).toBe(true); // 關選單那一輪不得觸發 back()，善書冊必須留在畫面上
   });
 
   it('單層不變式：堆疊深度不超過 1', async () => {
