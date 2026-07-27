@@ -1,11 +1,11 @@
-# 圖片點擊全螢幕檢視（lightbox）設計文件
+# 圖片點擊全螢幕檢視＋疊層統一關閉 設計文件
 
-日期：2026-07-28。狀態：使用者已於對話中逐項定案並口頭放行設計，待審此文件。
+日期：2026-07-28。狀態：使用者已於對話中逐項定案並放行設計（含追加的疊層統一關閉），待審此文件。
 適用範圍：**本設計同時適用 `hell-tour-game` 與 `hell-tour-family` 兩個 repo**，兩份同名文件內容一致。
 
 ## 背景與目標
 
-使用者需求原文：「圖片都可以點一下放大成全螢幕，再點一下就回到原來位置與大小。」
+使用者需求原文：「圖片都可以點一下放大成全螢幕，再點一下就回到原來位置與大小。」追加：「順便幫漢堡選單和善書冊疊層補 Esc／返回鍵。」
 
 現況調查（兩 repo 一致）：
 
@@ -13,9 +13,14 @@
 - 入口封面圖 `cover-art` 在 `js/ui/coverView.js:8` 另外直接建立，帶有「載入失敗改用 `jigong-main.webp`」的 fallback。
 - **所有插圖皆為 `object-fit: cover` ＋固定 `aspect-ratio`（css/style.css:226-262），畫面上看到的圖是被裁切過的。** 因此全螢幕檢視的價值不只是放大，更是首次讓使用者看到完整未裁切的美術。
 - 遊戲**完全未使用瀏覽器 history API**（`engine/scene.js` 的 `history` 是遊戲內部節點堆疊），亦未監聽任何 keydown。
-- 既有疊層樣式可循：`#nav-overlay`（z-index 30）、`#booklet-overlay`（z-index 30）、`#nav-toast`（z-index 40）。兩者皆僅靠點擊關閉。
+- 現存疊層恰為兩個，**生命週期模型不同**：
+  - `#nav-overlay`（漢堡選單，z-index 30）— 常駐 DOM，以 `.open` class 開關（`nav.js:34-40`）。可點背景關、可按 ✕ 關。
+  - `#booklet-overlay`（善書冊，z-index 30）— 每次開啟時新建、關閉時整個 `remove()`（`flow.js:207-215`）。**目前僅能靠「合上善書冊 ▸」按鈕關閉，點背景無效。**
+- `renderShareOverlay` 雖名為 overlay，實際渲染進 `#app`（`flow.js:238`），是取代主畫面的 view 而非疊層。
+- **`nav.js` 與善書冊疊層目前無任何測試覆蓋。**
+- 目前不會發生疊層互疊：選單開啟善書冊前會先關閉自己（`nav.js:44`），善書冊內容不含圖片。
 
-目標：所有圖片可點擊放大為全螢幕完整檢視，再點一下還原，且不改動任何既有遊戲流程。
+目標：所有圖片可點擊放大為全螢幕完整檢視；三個疊層（含新的大圖）一律可用 Esc 與系統返回鍵關閉；不改動任何既有遊戲流程。
 
 ## 已定案決策（使用者選定）
 
@@ -24,10 +29,36 @@
 | 適用範圍 | **全部圖片，含入口封面** |
 | 關閉方式 | 點任意處、右上 ✕ 鈕、Esc 鍵、**手機系統返回鍵**（四者皆要） |
 | 放大深度 | **純檢視**：完整圖（contain）置中淡入。不做雙指縮放／拖曳，不做 FLIP 飛行動畫 |
+| 既有疊層 | 漢堡選單與善書冊**一併補上** Esc 與系統返回鍵 |
 
-## A. 架構
+## A. 共用疊層關閉管理：`js/ui/layer.js`（新檔）
 
-新增 `js/ui/lightbox.js`，模組內維護**單一**疊層實例，於第一次點圖時才建立並 append 到 `document.body`（lazy）。`index.html` 不新增任何節點，既有 `tests/html.test.js` 不受影響。
+三個疊層需要完全相同的「Esc ＋ 系統返回鍵」行為。history 的推入與消耗若各寫一份，極易寫錯而弄亂上一頁。故抽為單一模組集中管理。
+
+**職責邊界**：`layer.js` 只管「何時該關」，**不碰任何疊層的 DOM**。各疊層維持自己既有的生命週期（class 切換或 remove），把「怎麼關」以回呼傳入。這使得兩種不同生命週期模型可共用同一套關閉語意。
+
+**介面**：
+
+```js
+export function pushLayer(onClose)  // → { close() }
+```
+
+**行為規格**：
+
+- `pushLayer(onClose)` 將該層推入模組內的 LIFO 堆疊，並嘗試 `history.pushState({ layer: true }, '')`，於該層記錄是否成功推入歷程。首次呼叫時綁定 document 的 `keydown` 與 window 的 `popstate` 監聽（**全模組只綁一次**，不重複累加）。
+- 回傳 handle 的 `close()`：
+  - 該層已不在堆疊中 → 忽略（**冪等**，可安全重複呼叫）。
+  - 該層為最上層且成功推過歷程 → 呼叫 `history.back()`，實際收尾交給 `popstate`。
+  - 其餘情形 → 直接收尾。
+- `popstate` 觸發 → 關閉最上層；堆疊為空時為 no-op（不再往前導航）。
+- Esc `keydown` → 堆疊非空時關閉最上層。
+- 收尾 = 自堆疊移除該層並呼叫其 `onClose()`。
+
+**已知限制（可接受）**：非最上層的疊層以自身按鈕關閉時，直接收尾而不動歷程，可能殘留一筆歷程，使用者需多按一次返回鍵才離開頁面。此情形僅在疊層互疊時發生，而本 app 目前不存在互疊（見背景調查），故不額外處理。測試中以「單層不變式」斷言此前提。
+
+## B. 大圖檢視：`js/ui/lightbox.js`（新檔）
+
+模組內維護**單一**疊層實例，於第一次點圖時才建立並 append 到 `document.body`（lazy）。`index.html` 不新增任何節點，既有 `tests/html.test.js` 不受影響。
 
 對外介面單一：
 
@@ -46,42 +77,38 @@ export function enableLightbox(img)
 
 點擊時取 `img.currentSrc || img.src`（**於點擊當下讀取**，而非掛載時），使封面的 fallback 換圖後仍指向正確來源。
 
-## B. 疊層外觀與版面
+開啟時透過 `pushLayer()` 註冊，關閉一律經由該 handle 的 `close()`。
 
-- 元素 id `lightbox`，`position: fixed; inset: 0; z-index: 35`（夾在漢堡選單／善書冊的 30 與提示浮層的 40 之間）。
+## C. 大圖疊層的外觀與版面
+
+- 元素 id `lightbox`，`position: fixed; inset: 0; z-index: 35`（高於既有兩疊層的 30，低於提示浮層的 40）。
 - 底色 `rgba(0, 0, 0, 0.92)`，兩個 repo 主題（地府暗色／天堂白）通用。
 - 大圖 `max-width: 100%; max-height: 100%; object-fit: contain`，**完整顯示不裁切**，四周留 16px padding。
 - 右上角 44×44 ✕ 關閉鈕，沿用 `.nav-btn` 的金框圓鈕語彙，`aria-label="關閉大圖"`。
 - 底部置中一行小字提示「點任意處關閉」（常駐，非首次限定）。
 - 淡入淡出 0.18s：以 `opacity` ＋ `visibility` 過渡（不可用 `display`，否則無法過渡）。
 - 游標：圖片上 `zoom-in`，疊層上 `zoom-out`。
-- 開啟時鎖背景捲動：記錄 `document.body.style.overflow` 原值，關閉時還原原值（不硬設空字串）。
+- 開啟時鎖背景捲動：記錄 `document.body.style.overflow` 原值，關閉時還原原值（不硬設空字串）。**此項僅大圖疊層採用**，既有兩疊層的捲動行為維持原狀。
 
-## C. 開關與 history 整合
+## D. 三個疊層的接入
 
-**開啟**：設定大圖 src → 加 `open` class → 鎖捲動 → `pushState`。
+| 疊層 | 註冊時機 | `onClose` 回呼 | 既有關閉入口改為 |
+|---|---|---|---|
+| 大圖 `#lightbox` | 開啟時 | 移除 `.open`、還原捲動 | 點疊層任一處（含大圖本身）、✕ 鈕 → `close()` |
+| 漢堡選單 `#nav-overlay` | `nav.js` 的 `open()` | `overlay.classList.remove('open')` | 點背景、✕ 鈕、選單項目、`menuBtn` 再按一次 → `close()` |
+| 善書冊 `#booklet-overlay` | `flow.js` 的 `openBookletOverlay()` | `overlay.remove()` | 「合上善書冊 ▸」→ `close()` |
 
-**四條關閉路徑收斂到同一出口**：
+改動極薄：`nav.js` 的 `close()`／`open()` 內部改走 handle，對外的 `closeMenu` 等既有介面與呼叫端**簽名完全不變**；`flow.js` 僅將 `renderBooklet` 的 `onBack` 回呼由 `() => overlay.remove()` 改為 handle 的 `close()`。
 
-| 觸發 | 路徑 |
-|---|---|
-| 點疊層任一處（**含大圖本身**） | `close()` |
-| ✕ 鈕 | `close()` |
-| Esc 鍵 | `close()`（keydown 掛 document，僅在疊層開啟時作用） |
-| 系統返回鍵／iOS 左緣右滑 | `popstate` → 直接收尾 |
+## E. 降級與邊界
 
-**history 成對規則**：開啟時 `history.pushState({ lightbox: 1 }, '')` 並設 `pushed = true`。前三種關法**一律先呼叫 `history.back()`**，由 `popstate` 統一執行 DOM 收尾並將 `pushed` 設回 false。如此不論從哪一條路關閉，推入的那筆歷程必被消耗，不累積髒歷程、不影響遊戲既有流程。
-
-`pushed` 為 false 時（見降級）關閉直接執行 DOM 收尾。
-
-## D. 降級與邊界
-
-- **`file://` 直開**：`pushState` 在 `file://` 下會丟 `SecurityError`。以 try/catch 包覆，失敗則 `pushed` 保持 false，關閉走直接收尾路徑，功能完全正常，只是返回鍵不參與。
+- **`file://` 直開**：`pushState` 在 `file://` 下會丟 `SecurityError`。以 try/catch 包覆，失敗則該層標記為未推入歷程，關閉走直接收尾路徑，Esc 與點擊關閉完全正常，僅返回鍵不參與。
 - **圖片載入失敗**：`artImg` 既有 error→remove 降級不變；元素已移除即無從點擊。封面則已有 fallback 換圖。
-- **重複點擊**：疊層為單例，連點不會產生第二層；已開啟時再次開啟僅換 src。
+- **重複點擊**：大圖疊層為單例，連點不會產生第二層；已開啟時再次開啟僅換 src。
+- **重複關閉**：`close()` 冪等，選單「點背景」與「✕」等多重入口不會重複消耗歷程。
 - **既有互動衝突**：現有插圖皆無點擊行為，「繼續／選項」都是 `<button>`，無衝突。
 
-## E. 無障礙取捨（明確決策）
+## F. 無障礙取捨（明確決策）
 
 圖片維持 `alt=''` 的裝飾性語意，**不加 `tabindex`、不改為 button 角色**。
 
@@ -89,16 +116,29 @@ export function enableLightbox(img)
 
 代價：**開啟大圖需要滑鼠或觸控**。但疊層一旦開啟即為鍵盤可操作 — ✕ 鈕可 focus、Esc 可關。此為刻意取捨，非疏漏。
 
-## F. 兩個 repo 的套用方式
+## G. 兩個 repo 的套用方式
 
-- `js/ui/render.js` 與 `js/ui/coverView.js` 兩 repo 目前**逐字相同**；無共用套件機制，同一份改動各套一次。
-- `js/ui/lightbox.js` 為新檔，兩 repo 各放一份相同內容。
+- 檔案分歧情形已逐一 diff 查核（2026-07-28）：`js/ui/render.js` 與 `js/ui/nav.js` 兩 repo **逐字相同**；`js/ui/coverView.js` 僅封面標題／副標／tagline 三行文字不同，**`cover-art` 建立段落相同**；`js/flow.js` 整體已分歧（family 多序章換景與回天看樹），但 `openBookletOverlay` 一段相同。無共用套件機制，同一份改動各套一次。
+- `js/ui/layer.js`、`js/ui/lightbox.js` 為新檔，兩 repo 各放一份相同內容。
 - `css/style.css` 兩 repo 已分歧（family 多天堂主題），新樣式各自附加於疊層區塊之後；疊層底色為中性黑，兩主題通用。
-- `tests/lightbox.test.js` 為新檔，兩 repo 各放一份相同內容。
+- `tests/layer.test.js`、`tests/lightbox.test.js` 為新檔，兩 repo 各放一份相同內容。
 
-## G. 測試策略
+## H. 測試策略
 
-新增 `tests/lightbox.test.js`（`// @vitest-environment happy-dom`，與既有測試一致），涵蓋：
+新增測試檔（`// @vitest-environment happy-dom`，與既有測試一致）：
+
+**`tests/layer.test.js`** — 關閉語意的核心，優先以 TDD 撰寫：
+
+1. Esc 關閉最上層並觸發其 `onClose`
+2. `popstate` 關閉最上層
+3. handle 的 `close()` 觸發 `onClose`
+4. `close()` 冪等：重複呼叫只觸發一次 `onClose`
+5. 開關一輪後歷程成對：`pushState` 與 `back` 呼叫次數相等
+6. 堆疊為空時 Esc 與 `popstate` 皆為 no-op
+7. `pushState` 拋錯（模擬 `file://`）時仍可正常關閉
+8. 多次開關不重複綁定 document 監聽器
+
+**`tests/lightbox.test.js`**：
 
 1. `artImg()` 產出的圖帶有 `zoomable` class
 2. 點圖後 body 出現 `#lightbox.open`，其中大圖 src 與原圖相同
@@ -107,17 +147,25 @@ export function enableLightbox(img)
 5. Esc 可關閉
 6. `popstate` 可關閉
 7. 關閉後再開不會產生第二個疊層
-8. `cover-art` 亦可放大（含 fallback 換圖後 src 正確）
+8. 開啟鎖背景捲動、關閉還原為原值
+9. `cover-art` 亦可放大（含 fallback 換圖後 src 正確）
+
+**既有疊層的新增覆蓋**（此二者原本無測試）：
+
+10. 漢堡選單：開啟後 Esc 關閉、`popstate` 關閉、點背景仍可關閉（不回歸）
+11. 善書冊：開啟後 Esc 關閉、`popstate` 關閉、「合上善書冊」仍可關閉（不回歸）
+12. 單層不變式：任一時點堆疊深度不超過 1
 
 既有測試相容性已查核：`tests/ui.test.js:135-137` 僅斷言 `src` 屬性，新增 class 與監聽不影響；`tests/html.test.js` 因不動 `index.html` 而不受影響。
 
-守門不放寬：兩 repo `npm test` 全數通過（2026-07-28 實測基準：game 162、family 167，各 15 個測試檔，只增不減）。無新增圖片資產，僅增約 2KB JS/CSS，美術 6MB 守門不受影響。
+守門不放寬：兩 repo `npm test` 全數通過（2026-07-28 實測基準：game 162、family 167，各 15 個測試檔，只增不減）。無新增圖片資產，僅增約 3KB JS/CSS，美術 6MB 守門不受影響。
 
-完成後由控制者以 Playwright 390×844 目視驗收：場景主圖、直式立繪、孽鏡圖、結局圖、入口封面各點開一次並關閉；另確認 ≥900px 桌機「左圖右文」版位下正常。
+完成後由控制者以 Playwright 390×844 目視驗收：場景主圖、直式立繪、孽鏡圖、結局圖、入口封面各點開一次並關閉；漢堡選單與善書冊各以 Esc 關閉一次；另確認 ≥900px 桌機「左圖右文」版位下正常。
 
-## H. 範圍外（本設計不含）
+## I. 範圍外（本設計不含）
 
 - 雙指縮放、拖曳平移、多圖左右滑動切換。
 - 圖片 alt 文字撰寫、鍵盤開啟大圖。
-- 為漢堡選單與善書冊疊層補 Esc／返回鍵支援（既有行為不動，避免擴大範圍）。
+- **為善書冊疊層補「點背景關閉」** — 它現在只能按按鈕關。加了會與選單一致，但閱讀中誤觸即關閉的風險較高，且非本次所求，故不動。
+- `renderShareOverlay`（分享卡）— 它是 `#app` 內的 view 而非疊層，已有自己的返回路徑。
 - 部署上線 — 實作與測試完成後另行請使用者放行。
