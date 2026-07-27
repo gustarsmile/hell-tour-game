@@ -33,7 +33,7 @@
 | `js/ui/nav.js` | 改 | 選單 `open()`／`close()` 改走 layer handle |
 | `js/flow.js` | 改 | `openBookletOverlay()` 改走 layer handle |
 | `css/style.css` | 改 | 附加大圖疊層樣式 |
-| `tests/layer.test.js` | 新增 | layer.js 的 11 個關閉語意案例（單元） |
+| `tests/layer.test.js` | 新增 | layer.js 的 12 個關閉語意案例（單元） |
 | `tests/lightbox.test.js` | 新增 | 大圖疊層 12 案例 |
 | `tests/overlays.test.js` | 新增 | 漢堡選單 4 案例＋善書冊 5 案例（整合）。**獨立成檔**：這些測試會清掉 body 內的疊層節點，與 lightbox 單例共處一檔會造成跨測試污染 |
 
@@ -203,6 +203,26 @@ describe('layer.js', () => {
     fireBack();
     expect(outer).toHaveBeenCalledTimes(1);
     expect(layerDepth()).toBe(0);
+    expect(window.history.pushState).toHaveBeenCalledTimes(2); // 堆疊已空，不得再補推孤兒紀錄
+  });
+
+  // 帳目守恆：走完「開 A → 同輪關 A 開 B → 關 B」後，pushState 與 back 次數必須相等，
+  // 且系統要回到乾淨狀態（held／consuming 都已重置）——以「再開一層會讓 pushState +1」證明。
+  // 這條同時守住 onPopstate 的 held = false 與 consuming = false 兩行；
+  // 少了它，那兩行被刪掉都不會有任何測試變紅。
+  it('帳目守恆：一輪互動後 pushState 與 back 次數相等且狀態歸零', async () => {
+    const a = pushLayer(() => {});
+    a.close();
+    const b = pushLayer(() => {});
+    b.close();
+    await flush();
+    await flush();
+    expect(window.history.pushState).toHaveBeenCalledTimes(1);
+    expect(backSpy).toHaveBeenCalledTimes(1);
+    expect(layerDepth()).toBe(0);
+
+    pushLayer(() => {}); // 狀態已歸零的證明：能再推一筆
+    expect(window.history.pushState).toHaveBeenCalledTimes(2);
   });
 
   it('back 回音在途期間開新層，回音抵達時補推歷程', async () => {
@@ -210,6 +230,9 @@ describe('layer.js', () => {
     await Promise.resolve(); // 讓對帳的 microtask 跑完，此時 back() 已呼叫、popstate 尚未到
     const second = vi.fn();
     pushLayer(second);
+    // 守住 pushLayer 的 !consuming 條件——那是「不在 back() 在途時 pushState」的唯一防線，
+    // 也就是造成 about:blank 的交錯本身。少了這行斷言，拿掉 !consuming 測試照樣全綠。
+    expect(window.history.pushState).toHaveBeenCalledTimes(1); // 回音在途期間不得推
     await flush();
     expect(second).not.toHaveBeenCalled();                     // 回音不得關掉新層
     expect(window.history.pushState).toHaveBeenCalledTimes(2); // 補推了一筆給新層用
@@ -278,7 +301,9 @@ function onPopstate() {
   // 若下層仍開著，補推一筆讓返回鍵也能逐層關掉。本 app 目前無巢狀，
   // 但 artImg() 會自動為圖片掛上大圖疊層，日後只要有人在選單或善書冊裡放一張圖
   // 就會出現巢狀；少了這行，第二次按返回鍵會直接退出遊戲。
-  if (stack.length) pushEntry(win);
+  // !held 與上面 consuming 分支對稱：若某層的 onClose 同步開了新層，該層已自行推過一筆，
+  // 這裡再推就會讓同一個非空堆疊持有兩筆，返回鍵得按兩次。
+  if (stack.length && !held) pushEntry(win);
 }
 
 // 對帳延到 microtask 執行：close(); fn(); 這種同一輪內關舊層又開新層的路徑，
@@ -336,12 +361,12 @@ export function resetLayers() {
 - [ ] **Step 4: 執行測試確認通過**
 
 Run: `npm test -- tests/layer.test.js`
-Expected: PASS，11 passed
+Expected: PASS，12 passed
 
 - [ ] **Step 5: 執行全套測試確認無回歸**
 
 Run: `npm test`
-Expected: 173 passed（162 + 11）
+Expected: 174 passed（162 + 12）
 
 - [ ] **Step 6: Commit**
 
@@ -675,7 +700,7 @@ Expected: PASS，12 passed
 - [ ] **Step 8: 執行全套測試確認無回歸**
 
 Run: `npm test`
-Expected: 185 passed（173 + 12）。特別確認 `tests/ui.test.js` 與 `tests/html.test.js` 仍全過。
+Expected: 186 passed（174 + 12）。特別確認 `tests/ui.test.js` 與 `tests/html.test.js` 仍全過。
 
 - [ ] **Step 9: Commit**
 
@@ -912,7 +937,7 @@ Expected: PASS，9 passed（4 選單 + 5 善書冊）
 - [ ] **Step 6: 執行全套測試確認無回歸**
 
 Run: `npm test`
-Expected: 194 passed（185 + 9），18 個測試檔。特別確認 `tests/flow.test.js` 全過。
+Expected: 195 passed（186 + 9），18 個測試檔。特別確認 `tests/flow.test.js` 全過。
 
 - [ ] **Step 7: Commit**
 
@@ -1037,7 +1062,7 @@ import { pushLayer } from './ui/layer.js';
 - [ ] **Step 6: 執行全套測試**
 
 Run: `npm test`
-Expected: 199 passed（167 + 11 + 12 + 9），18 個測試檔
+Expected: 200 passed（167 + 12 + 12 + 9），18 個測試檔
 
 **family 專屬風險**：`js/ui/coverView.js` 的封面標題文字若被 Step 1 誤複製覆蓋，`tests/html.test.js` 或既有封面測試會失敗。若出現此類失敗，先 `git diff js/ui/coverView.js` 確認三行文字是否被改成 game 版。
 
