@@ -1,4 +1,5 @@
 import { el } from './render.js';
+import { enableLightbox } from './lightbox.js';
 
 // 入口封面：選「完整遊歷」或「精簡速覽」，有存檔時可續玩
 export function renderCover({ resumable, modes }, handlers, root) {
@@ -10,6 +11,7 @@ export function renderCover({ resumable, modes }, handlers, root) {
   art.decoding = 'async';
   art.src = 'assets/art/cover.webp';
   art.addEventListener('error', () => { art.src = 'assets/art/jigong-main.webp'; }, { once: true });
+  enableLightbox(art);
   box.appendChild(art);
 
   const body = el('div', 'cover-body');

@@ -460,3 +460,58 @@ body {
   .cover-body { flex: 1; min-width: 0; padding: 32px 30px; align-self: center; }
   .cover-title, .cover-subtitle { text-align: center; }
 }
+
+/* ===== 大圖檢視（點圖放大，js/ui/lightbox.js） =====
+   底色恆為黑，故色值一律寫死不用 CSS 變數——family 的 theme-heaven
+   會把 --gold／--paper-dim 翻成深色，沿用變數會變成深色字壓黑底。 */
+img.zoomable { cursor: zoom-in; }
+
+#lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 35; /* 高於選單／善書冊的 30，低於提示浮層的 40 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.92);
+  cursor: zoom-out;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s;
+}
+#lightbox.open {
+  opacity: 1;
+  visibility: visible;
+}
+.lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* 完整圖不裁切——版面上的圖是 cover 裁過的 */
+  border-radius: 4px;
+}
+.lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid #8a7020;
+  background: rgba(23, 19, 15, 0.8);
+  color: #c9a227;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.lightbox-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  margin: 0;
+  text-align: center;
+  color: #cbbc9c;
+  font-size: 0.8rem;
+}

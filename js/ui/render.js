@@ -1,3 +1,5 @@
+import { enableLightbox } from './lightbox.js';
+
 export function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -12,6 +14,7 @@ export function artImg(file, className = 'art-banner') {
   img.decoding = 'async';
   img.loading = className === 'art-banner' ? 'eager' : 'lazy'; // 主圖立即載，避免文字先出圖後跳
   img.addEventListener('error', () => img.remove()); // 資產缺失時優雅降級
+  enableLightbox(img);
   return img;
 }
 
