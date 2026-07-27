@@ -45,20 +45,27 @@ export function pushLayer(onClose)  // → { close() }
 
 **行為規格**：
 
-- `pushLayer(onClose)` 將該層推入模組內的 LIFO 堆疊，並嘗試 `history.pushState({ layer: true }, '')`，於該層記錄是否成功推入歷程。首次呼叫時綁定 document 的 `keydown` 與 window 的 `popstate` 監聽（**全模組只綁一次**，不重複累加）。
+**歷程策略：全域恰好一筆，而非每層一筆。** 只要堆疊非空就持有一筆 `history` 紀錄；堆疊清空時才退掉它。模組狀態有二：`held`（目前是否持有那筆紀錄）、`consuming`（已呼叫 `back()`，正在等自己的 popstate 回音）。
+
+- `pushLayer(onClose)` 將該層推入 LIFO 堆疊；**僅當 `held` 與 `consuming` 皆為 false 時**才 `history.pushState({ layer: true }, '')` 並設 `held = true`。首次呼叫時綁定 document 的 `keydown` 與 window 的 `popstate` 監聽（**全模組只綁一次**）。
 - 回傳 handle 的 `close()`：
-  - 該層已不在堆疊中 → 忽略（**冪等**，可安全重複呼叫）。
-  - 否則**立即收尾**（自堆疊移除該層並呼叫其 `onClose()`）；若該層曾成功推入歷程，則將 `pendingBacks` 加一後呼叫 `history.back()` 消耗該筆歷程。
+  - 該層已不在堆疊中 → 忽略（**冪等**）。
+  - 否則**立即收尾**（自堆疊移除該層並呼叫其 `onClose()`），然後把「對帳」排入 **microtask**。
+- 對帳（microtask 內執行）：堆疊仍非空 → 什麼都不做，保留那筆紀錄；堆疊已空且 `held` → 設 `held = false`、`consuming = true`、呼叫 `history.back()`。
 - `popstate` 觸發：
-  - `pendingBacks > 0` → 減一並 return。這是我們自己呼叫 `history.back()` 的回音，不是使用者按返回鍵。
-  - 否則關閉最上層；堆疊為空時為 no-op（不再往前導航）。
+  - `consuming` 為 true → 設回 false（這是自己 `back()` 的回音）；**若回音期間又開了新層且未持有紀錄，補推一筆**，確保返回鍵仍能關閉它。
+  - 否則設 `held = false`（瀏覽器已替我們退掉那筆），堆疊非空則關閉最上層。
 - Esc `keydown` → 堆疊非空時關閉最上層。
 
-**`pendingBacks` 為何必要（非防禦性設計，是修一個必然發生的錯）**：`nav.js:44` 的 `menuAction` 為 `close(); fn();` 同步連續執行 — 關閉選單觸發 `history.back()`，而 `fn()` 立刻開啟善書冊。瀏覽器的 `popstate` 非同步送達，屆時堆疊頂端已是善書冊；若不辨識該事件來源，**每次點「翻閱善書冊」都會被自己剛才的關閉動作關掉**。`pendingBacks` 使「自己呼叫的 back」與「使用者按的返回鍵」可區分。
+**為何是「全域一筆 + microtask 對帳」（2026-07-28 真實瀏覽器實測後的修正）**：`nav.js:44` 的 `menuAction` 為 `close(); fn();` 同步連續執行 — 關閉選單與開啟善書冊發生在同一輪。原設計（每層各推一筆、關閉即呼叫 `back()`、以 `pendingBacks` 計數器辨識回音）在 happy-dom 的單元測試下全過，但**在真實瀏覽器會壞**：`back()` 尚未落地時 `fn()` 已呼叫 `pushState`，而瀏覽器的 `back()` 解析為「回到呼叫當下的那一筆」之絕對位置而非「相對當前退一步」，導致歷程位置比內部帳目少一格。後續關閉善書冊再 `back()` 一次就多退一步，**整個離開遊戲跳到 about:blank**；Esc、返回鍵、「合上善書冊 ▸」三條關閉路徑皆中，100% 重現。
 
-**收尾採立即執行而非等 popstate**：確保點擊關閉時畫面即時反應，不受 `popstate` 非同步延遲影響。
+microtask 對帳從根本消除交錯：同一輪內關舊層又開新層時，對帳執行時堆疊已非空，**根本不會呼叫 `back()`**，`pushState` 與 `back()` 永不同時在途。`pendingBacks` 計數器因此廢除。
 
-**測試環境限制（已實測）**：happy-dom v15 的 `history.back()` **不會**觸發 `popstate`（`pushState`、手動 dispatch `PopStateEvent`、`keydown` 皆正常）。測試中以 `vi.spyOn(window.history, 'back')` 取代，於下一個 macrotask dispatch `PopStateEvent`，忠實模擬瀏覽器行為；此 stub 同時作為 `history.back()` 呼叫次數的斷言依據。
+**收尾採立即執行、對帳才延後**：畫面即時反應不受影響，延後的只有歷程調整。
+
+**測試環境限制（已實測）**：happy-dom v15 的 `history.back()` **不會**觸發 `popstate`（`pushState`、手動 dispatch `PopStateEvent`、`keydown` 皆正常）。測試中以 `vi.spyOn(window.history, 'back')` 取代，於下一個 macrotask dispatch `PopStateEvent`；此 stub 同時作為 `history.back()` 呼叫次數的斷言依據。
+
+**單元測試無法取代真實瀏覽器驗收（本專案的實證教訓）**：happy-dom 沒有真正的歷程索引，`back()` 是我們自己 mock 的，因此**任何與歷程位置相關的錯誤在單元測試中結構上不可見**。上述 about:blank 缺陷在 192 個單元測試全過的情況下存在，是靠 Playwright 實機驗收才發現。凡動到 `layer.js` 的歷程策略，**一律必須在真實瀏覽器複驗**「選單→翻閱善書冊→以三種方式關閉」與「關閉所有疊層後按返回鍵應正常離開頁面」兩條路徑。
 
 **已知限制（可接受）**：非最上層的疊層以自身按鈕關閉時仍會呼叫 `history.back()`，順序上可能消耗到他層的歷程。此情形僅在疊層互疊時發生，而本 app 目前不存在互疊（見背景調查），故不額外處理。測試中以「單層不變式」斷言此前提。
 
