@@ -325,8 +325,13 @@ beforeEach(() => {
   });
 });
 
+// 必須走「真正的關閉路徑」而不是只拿掉 open class：lightbox.js 的模組級 layer
+// 要靠 onClose 才會歸零，而 resetLayers() 只清 layer.js 自己的堆疊。若讓某個測試
+// 帶著開啟狀態結束（例如「關閉後再開」那個案例），殘留的死 handle 會讓
+// openLightbox 的 if (layer) return 短路掉後續所有案例。
 afterEach(async () => {
-  document.querySelector('#lightbox')?.classList.remove('open');
+  const box = document.querySelector('#lightbox');
+  if (box?.classList.contains('open')) box.click();
   resetLayers();
   await flush();
   vi.restoreAllMocks();
@@ -348,7 +353,6 @@ describe('lightbox.js', () => {
     img.click();
     expect(isOpen()).toBe(true);
     expect(lb().querySelector('.lightbox-img').src).toBe(img.src);
-    lb().click(); // 收尾關閉，避免 body.style.overflow 殘留污染後續案例
   });
 
   it('已開啟時再次開啟只換圖，不重複推疊層', () => {
