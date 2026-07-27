@@ -1,7 +1,15 @@
 // 疊層關閉的共用管理：Esc 與系統返回鍵，後開先關（LIFO）。
 // 本模組只管「何時該關」，不碰任何疊層的 DOM——各疊層以 onClose 回呼自理。
+//
+// 歷程策略：只要堆疊非空就「恰好」持有一筆 history 紀錄，不是每層各推一筆。
+// 原因（2026-07-28 真實瀏覽器實測）：nav.js 的 menuAction 是 close(); fn(); 同步連續執行，
+// 若關閉時立刻 back()、緊接著 fn() 又 pushState，兩者會在途中交錯——瀏覽器的 back()
+// 解析為「回到呼叫當下那一筆」的絕對位置而非相對退一步，導致歷程位置比內部帳目少一格，
+// 下一次關閉再 back() 就多退一步，整個離開遊戲跳到 about:blank。
+// 改以 microtask 對帳後，同一輪內關舊層又開新層時根本不會呼叫 back()，交錯不復存在。
 const stack = [];
-let pendingBacks = 0; // 我方呼叫 history.back() 的筆數，用來辨識 popstate 來源
+let held = false;      // 目前是否持有那筆歷程紀錄
+let consuming = false; // 已呼叫 back()，正在等自己的 popstate 回音
 let boundDoc = null;
 
 function dismiss(layer) {
@@ -18,14 +26,36 @@ function onKeydown(e) {
   stack[stack.length - 1].close();
 }
 
-// popstate 有兩種來源：使用者按返回鍵，或我方 close() 呼叫 back() 的回音。
-// 後者必須忽略——否則「關選單、同一輪立刻開善書冊」會把善書冊關掉。
+function pushEntry(win) {
+  try {
+    win.history.pushState({ layer: true }, '');
+    held = true;
+  } catch {
+    held = false; // file:// 直開時 pushState 會丟 SecurityError，降級為僅點擊／Esc 可關
+  }
+}
+
+// popstate 有兩種來源：使用者按返回鍵，或我方 back() 的回音。
 function onPopstate() {
-  if (pendingBacks > 0) {
-    pendingBacks -= 1;
+  const win = boundDoc.defaultView;
+  if (consuming) {
+    consuming = false;
+    // 回音在途期間若又開了新層，補推一筆，讓返回鍵仍能關閉它
+    if (stack.length && !held) pushEntry(win);
     return;
   }
+  held = false; // 瀏覽器已替我們退掉那筆
   if (stack.length) dismiss(stack[stack.length - 1]);
+}
+
+// 對帳延到 microtask 執行：close(); fn(); 這種同一輪內關舊層又開新層的路徑，
+// 對帳時堆疊已非空，就保留原本那筆歷程、不呼叫 back()
+function reconcile(win) {
+  if (stack.length) return;
+  if (!held) return;
+  held = false;
+  consuming = true;
+  win.history.back();
 }
 
 function unbind() {
@@ -45,20 +75,15 @@ function ensureBound(doc) {
 
 export function pushLayer(onClose, doc = document) {
   ensureBound(doc);
-  const layer = { onClose, pushed: false };
+  const win = doc.defaultView;
+  const layer = { onClose };
   layer.close = () => {
-    if (!dismiss(layer)) return; // 已關閉則不重複消耗歷程
-    if (!layer.pushed) return;
-    pendingBacks += 1;
-    doc.defaultView.history.back();
+    if (!dismiss(layer)) return; // 已關閉則不重複對帳
+    Promise.resolve().then(() => reconcile(win));
   };
-  try {
-    doc.defaultView.history.pushState({ layer: true }, '');
-    layer.pushed = true;
-  } catch {
-    layer.pushed = false; // file:// 直開時 pushState 會丟 SecurityError，降級為僅點擊／Esc 可關
-  }
   stack.push(layer);
+  // 已持有紀錄、或正在等回音，都不重複推——回音抵達時 onPopstate 會補推
+  if (!held && !consuming) pushEntry(win);
   return layer;
 }
 
@@ -69,6 +94,7 @@ export function layerDepth() {
 
 export function resetLayers() {
   stack.length = 0;
-  pendingBacks = 0;
+  held = false;
+  consuming = false;
   unbind();
 }
