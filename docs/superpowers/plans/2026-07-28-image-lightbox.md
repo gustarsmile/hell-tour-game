@@ -77,8 +77,13 @@ beforeEach(() => {
   vi.spyOn(window.history, 'pushState');
 });
 
-afterEach(() => {
+// 必須是 async 且 await flush()：測試中 close() 觸發的 mock back() 會排入 setTimeout，
+// 同步的 afterEach 不會讓它有機會執行，殘留計時器會累積到後面某個 await 一次湧入，
+// 把共用的 pendingBacks 提前用掉而誤關疊層。先 resetLayers() 再 flush，
+// 讓殘留 popstate 落在「堆疊已空」的 no-op 分支。
+afterEach(async () => {
   resetLayers();
+  await flush();
   vi.restoreAllMocks();
 });
 
@@ -125,7 +130,17 @@ describe('layer.js', () => {
   });
 
   it('堆疊為空時 Esc 與 popstate 皆為 no-op', () => {
+    // 必須先 pushLayer 讓監聽器實際掛上，再把堆疊清空。
+    // 若直接在未綁定狀態下 dispatch，事件沒人聽，not.toThrow() 會是恆真斷言，
+    // 連 onKeydown／onPopstate 的空堆疊 guard 整段刪掉都測不出來。
+    const onClose = vi.fn();
+    pushLayer(onClose);
+    fireBack(); // 以 popstate 關掉它——此路徑不動 pendingBacks
+    expect(layerDepth()).toBe(0);
+    onClose.mockClear();
+
     expect(() => { esc(); fireBack(); }).not.toThrow();
+    expect(onClose).not.toHaveBeenCalled();
     expect(layerDepth()).toBe(0);
   });
 
@@ -138,8 +153,17 @@ describe('layer.js', () => {
   });
 
   it('多次開關不重複綁定監聽器', () => {
+    // 直接數 addEventListener 的呼叫次數。只用「onClose 被叫幾次」測不出重複綁定：
+    // 第一個 handler 的 dismiss 會把該層移出堆疊，第二個 handler 見到空堆疊即 return，
+    // 正確與重複綁定兩種情形的結果無法區分。
+    const docSpy = vi.spyOn(document, 'addEventListener');
+    const winSpy = vi.spyOn(window, 'addEventListener');
     pushLayer(() => {}).close();
     pushLayer(() => {}).close();
+    pushLayer(() => {}).close();
+    expect(docSpy.mock.calls.filter(([type]) => type === 'keydown')).toHaveLength(1);
+    expect(winSpy.mock.calls.filter(([type]) => type === 'popstate')).toHaveLength(1);
+
     const onClose = vi.fn();
     pushLayer(onClose);
     esc();
