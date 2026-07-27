@@ -48,13 +48,21 @@ export function pushLayer(onClose)  // → { close() }
 - `pushLayer(onClose)` 將該層推入模組內的 LIFO 堆疊，並嘗試 `history.pushState({ layer: true }, '')`，於該層記錄是否成功推入歷程。首次呼叫時綁定 document 的 `keydown` 與 window 的 `popstate` 監聽（**全模組只綁一次**，不重複累加）。
 - 回傳 handle 的 `close()`：
   - 該層已不在堆疊中 → 忽略（**冪等**，可安全重複呼叫）。
-  - 該層為最上層且成功推過歷程 → 呼叫 `history.back()`，實際收尾交給 `popstate`。
-  - 其餘情形 → 直接收尾。
-- `popstate` 觸發 → 關閉最上層；堆疊為空時為 no-op（不再往前導航）。
+  - 否則**立即收尾**（自堆疊移除該層並呼叫其 `onClose()`）；若該層曾成功推入歷程，則將 `pendingBacks` 加一後呼叫 `history.back()` 消耗該筆歷程。
+- `popstate` 觸發：
+  - `pendingBacks > 0` → 減一並 return。這是我們自己呼叫 `history.back()` 的回音，不是使用者按返回鍵。
+  - 否則關閉最上層；堆疊為空時為 no-op（不再往前導航）。
 - Esc `keydown` → 堆疊非空時關閉最上層。
-- 收尾 = 自堆疊移除該層並呼叫其 `onClose()`。
 
-**已知限制（可接受）**：非最上層的疊層以自身按鈕關閉時，直接收尾而不動歷程，可能殘留一筆歷程，使用者需多按一次返回鍵才離開頁面。此情形僅在疊層互疊時發生，而本 app 目前不存在互疊（見背景調查），故不額外處理。測試中以「單層不變式」斷言此前提。
+**`pendingBacks` 為何必要（非防禦性設計，是修一個必然發生的錯）**：`nav.js:44` 的 `menuAction` 為 `close(); fn();` 同步連續執行 — 關閉選單觸發 `history.back()`，而 `fn()` 立刻開啟善書冊。瀏覽器的 `popstate` 非同步送達，屆時堆疊頂端已是善書冊；若不辨識該事件來源，**每次點「翻閱善書冊」都會被自己剛才的關閉動作關掉**。`pendingBacks` 使「自己呼叫的 back」與「使用者按的返回鍵」可區分。
+
+**收尾採立即執行而非等 popstate**：確保點擊關閉時畫面即時反應，不受 `popstate` 非同步延遲影響。
+
+**測試環境限制（已實測）**：happy-dom v15 的 `history.back()` **不會**觸發 `popstate`（`pushState`、手動 dispatch `PopStateEvent`、`keydown` 皆正常）。測試中以 `vi.spyOn(window.history, 'back')` 取代，於下一個 macrotask dispatch `PopStateEvent`，忠實模擬瀏覽器行為；此 stub 同時作為 `history.back()` 呼叫次數的斷言依據。
+
+**已知限制（可接受）**：非最上層的疊層以自身按鈕關閉時仍會呼叫 `history.back()`，順序上可能消耗到他層的歷程。此情形僅在疊層互疊時發生，而本 app 目前不存在互疊（見背景調查），故不額外處理。測試中以「單層不變式」斷言此前提。
+
+**測試用匯出**：`layerDepth()` 回傳目前堆疊深度、`resetLayers()` 清空堆疊與監聽狀態。兩者僅供測試使用（模組狀態在同一測試檔內跨案例殘留），正式流程不呼叫。
 
 ## B. 大圖檢視：`js/ui/lightbox.js`（新檔）
 
@@ -83,6 +91,7 @@ export function enableLightbox(img)
 
 - 元素 id `lightbox`，`position: fixed; inset: 0; z-index: 35`（高於既有兩疊層的 30，低於提示浮層的 40）。
 - 底色 `rgba(0, 0, 0, 0.92)`，兩個 repo 主題（地府暗色／天堂白）通用。
+- **疊層自身的 ✕ 鈕與提示文字一律使用寫死的暗色主題色值，不使用 CSS 變數**：`--gold` `#c9a227`、`--gold-dim` `#8a7020`、`--paper-dim` `#cbbc9c`。原因：family repo 的 `body.theme-heaven` 會把這些變數翻成深色（`--paper-dim` → `#8a795e`、`--gold` → `#a9832a`），而大圖底色恆為黑，沿用變數會在天堂主題下變成深色字壓黑底。
 - 大圖 `max-width: 100%; max-height: 100%; object-fit: contain`，**完整顯示不裁切**，四周留 16px padding。
 - 右上角 44×44 ✕ 關閉鈕，沿用 `.nav-btn` 的金框圓鈕語彙，`aria-label="關閉大圖"`。
 - 底部置中一行小字提示「點任意處關閉」（常駐，非首次限定）。
@@ -135,8 +144,9 @@ export function enableLightbox(img)
 4. `close()` 冪等：重複呼叫只觸發一次 `onClose`
 5. 開關一輪後歷程成對：`pushState` 與 `back` 呼叫次數相等
 6. 堆疊為空時 Esc 與 `popstate` 皆為 no-op
-7. `pushState` 拋錯（模擬 `file://`）時仍可正常關閉
+7. `pushState` 拋錯（模擬 `file://`）時仍可正常關閉，且不呼叫 `history.back()`
 8. 多次開關不重複綁定 document 監聽器
+9. **關鍵回歸**：關閉一層後同步開啟另一層，前者 `back()` 引發的 popstate **不得**關閉後者（`menuAction` 的 `close(); fn();` 情境）
 
 **`tests/lightbox.test.js`**：
 
@@ -152,9 +162,10 @@ export function enableLightbox(img)
 
 **既有疊層的新增覆蓋**（此二者原本無測試）：
 
-10. 漢堡選單：開啟後 Esc 關閉、`popstate` 關閉、點背景仍可關閉（不回歸）
-11. 善書冊：開啟後 Esc 關閉、`popstate` 關閉、「合上善書冊」仍可關閉（不回歸）
-12. 單層不變式：任一時點堆疊深度不超過 1
+10. 漢堡選單（測試對象 `createNav(doc)`）：開啟後 Esc 關閉、`popstate` 關閉、點背景仍可關閉（不回歸）、`menuBtn` 再按一次仍可關閉
+11. 善書冊（測試路徑：`startGame` 傳入假 nav 攔下 `nav.setMenu(cfg)`，再呼叫 `cfg.onBooklet()` 開啟，無須深度驅動遊戲）：開啟後 Esc 關閉、`popstate` 關閉、「合上善書冊」仍可關閉（不回歸）
+12. 「翻閱善書冊」端到端：經選單項目開啟後善書冊**仍在畫面上**（驗證 `pendingBacks` 在真實呼叫路徑上生效）
+13. 單層不變式：任一時點 `layerDepth()` 不超過 1
 
 既有測試相容性已查核：`tests/ui.test.js:135-137` 僅斷言 `src` 屬性，新增 class 與監聽不影響；`tests/html.test.js` 因不動 `index.html` 而不受影響。
 
