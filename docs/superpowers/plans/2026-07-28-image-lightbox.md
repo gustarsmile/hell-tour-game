@@ -34,7 +34,7 @@
 | `js/flow.js` | 改 | `openBookletOverlay()` 改走 layer handle |
 | `css/style.css` | 改 | 附加大圖疊層樣式 |
 | `tests/layer.test.js` | 新增 | layer.js 的 9 個關閉語意案例（單元） |
-| `tests/lightbox.test.js` | 新增 | 大圖疊層 11 案例 |
+| `tests/lightbox.test.js` | 新增 | 大圖疊層 12 案例 |
 | `tests/overlays.test.js` | 新增 | 漢堡選單 4 案例＋善書冊 5 案例（整合）。**獨立成檔**：這些測試會清掉 body 內的疊層節點，與 lightbox 單例共處一檔會造成跨測試污染 |
 
 ---
@@ -311,10 +311,10 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```js
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { enableLightbox } from '../js/ui/lightbox.js';
+import { enableLightbox, openLightbox } from '../js/ui/lightbox.js';
 import { artImg } from '../js/ui/render.js';
 import { renderCover } from '../js/ui/coverView.js';
-import { resetLayers } from '../js/ui/layer.js';
+import { resetLayers, layerDepth } from '../js/ui/layer.js';
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
@@ -348,6 +348,19 @@ describe('lightbox.js', () => {
     img.click();
     expect(isOpen()).toBe(true);
     expect(lb().querySelector('.lightbox-img').src).toBe(img.src);
+    lb().click(); // 收尾關閉，避免 body.style.overflow 殘留污染後續案例
+  });
+
+  it('已開啟時再次開啟只換圖，不重複推疊層', () => {
+    document.body.style.overflow = 'scroll';
+    artImg('hall1-scene.webp').click();
+    const second = artImg('hall2-scene.webp');
+    openLightbox(second.src);
+    expect(layerDepth()).toBe(1); // 沒有殘層
+    expect(lb().querySelector('.lightbox-img').src).toBe(second.src);
+    lb().click();
+    expect(document.body.style.overflow).toBe('scroll'); // 原始值未被 'hidden' 覆蓋
+    document.body.style.overflow = '';
   });
 
   it('點疊層背景可關閉', () => {
@@ -440,7 +453,6 @@ import { pushLayer } from './layer.js';
 let overlay = null;
 let bigImg = null;
 let layer = null;
-let prevOverflow = '';
 
 function ensureOverlay(doc) {
   if (overlay) return;
@@ -473,8 +485,12 @@ function ensureOverlay(doc) {
 export function openLightbox(src, doc = document) {
   ensureOverlay(doc);
   bigImg.src = src;
+  // 已開啟時只換圖：重複推疊層會讓原始捲動狀態被 'hidden' 覆蓋而永久遺失，
+  // 且會在 layer.js 堆疊裡留下無人消耗的殘層，破壞單層不變式
+  if (layer) return;
   overlay.classList.add('open');
-  prevOverflow = doc.body.style.overflow;
+  // 以區域變數捕獲，讓 closure 持有屬於這一次開啟的值，不受後續開啟影響
+  const prevOverflow = doc.body.style.overflow;
   doc.body.style.overflow = 'hidden';
   layer = pushLayer(() => {
     overlay.classList.remove('open');
@@ -585,12 +601,12 @@ img.zoomable { cursor: zoom-in; }
 - [ ] **Step 7: 執行測試確認通過**
 
 Run: `npm test -- tests/lightbox.test.js`
-Expected: PASS，11 passed
+Expected: PASS，12 passed
 
 - [ ] **Step 8: 執行全套測試確認無回歸**
 
 Run: `npm test`
-Expected: 182 passed（171 + 11）。特別確認 `tests/ui.test.js` 與 `tests/html.test.js` 仍全過。
+Expected: 183 passed（171 + 12）。特別確認 `tests/ui.test.js` 與 `tests/html.test.js` 仍全過。
 
 - [ ] **Step 9: Commit**
 
@@ -827,7 +843,7 @@ Expected: PASS，9 passed（4 選單 + 5 善書冊）
 - [ ] **Step 6: 執行全套測試確認無回歸**
 
 Run: `npm test`
-Expected: 191 passed（182 + 9），18 個測試檔。特別確認 `tests/flow.test.js` 全過。
+Expected: 192 passed（183 + 9），18 個測試檔。特別確認 `tests/flow.test.js` 全過。
 
 - [ ] **Step 7: Commit**
 
@@ -952,7 +968,7 @@ import { pushLayer } from './ui/layer.js';
 - [ ] **Step 6: 執行全套測試**
 
 Run: `npm test`
-Expected: 196 passed（167 + 9 + 11 + 9），18 個測試檔
+Expected: 197 passed（167 + 9 + 12 + 9），18 個測試檔
 
 **family 專屬風險**：`js/ui/coverView.js` 的封面標題文字若被 Step 1 誤複製覆蓋，`tests/html.test.js` 或既有封面測試會失敗。若出現此類失敗，先 `git diff js/ui/coverView.js` 確認三行文字是否被改成 game 版。
 
