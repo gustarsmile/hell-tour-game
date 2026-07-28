@@ -144,6 +144,26 @@ describe('layer.js', () => {
     fireBack();
     expect(outer).toHaveBeenCalledTimes(1);
     expect(layerDepth()).toBe(0);
+    expect(window.history.pushState).toHaveBeenCalledTimes(2); // 堆疊已空，不得再補推孤兒紀錄
+  });
+
+  // 帳目守恆：走完「開 A → 同輪關 A 開 B → 關 B」後，pushState 與 back 次數必須相等，
+  // 且系統要回到乾淨狀態（held／consuming 都已重置）——以「再開一層會讓 pushState +1」證明。
+  // 這條同時守住 onPopstate 的 held = false 與 consuming = false 兩行；
+  // 少了它，那兩行被刪掉都不會有任何測試變紅。
+  it('帳目守恆：一輪互動後 pushState 與 back 次數相等且狀態歸零', async () => {
+    const a = pushLayer(() => {});
+    a.close();
+    const b = pushLayer(() => {});
+    b.close();
+    await flush();
+    await flush();
+    expect(window.history.pushState).toHaveBeenCalledTimes(1);
+    expect(backSpy).toHaveBeenCalledTimes(1);
+    expect(layerDepth()).toBe(0);
+
+    pushLayer(() => {}); // 狀態已歸零的證明：能再推一筆
+    expect(window.history.pushState).toHaveBeenCalledTimes(2);
   });
 
   it('back 回音在途期間開新層，回音抵達時補推歷程', async () => {
@@ -151,6 +171,9 @@ describe('layer.js', () => {
     await Promise.resolve(); // 讓對帳的 microtask 跑完，此時 back() 已呼叫、popstate 尚未到
     const second = vi.fn();
     pushLayer(second);
+    // 守住 pushLayer 的 !consuming 條件——那是「不在 back() 在途時 pushState」的唯一防線，
+    // 也就是造成 about:blank 的交錯本身。少了這行斷言，拿掉 !consuming 測試照樣全綠。
+    expect(window.history.pushState).toHaveBeenCalledTimes(1); // 回音在途期間不得推
     await flush();
     expect(second).not.toHaveBeenCalled();                     // 回音不得關掉新層
     expect(window.history.pushState).toHaveBeenCalledTimes(2); // 補推了一筆給新層用

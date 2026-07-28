@@ -49,6 +49,11 @@ export function createNav(doc = document) {
 
   function menuAction(label, fn, cls = 'menu-action') {
     const btn = el('button', `btn ${cls}`, label);
+    // close(); fn(); 必須維持同步連續執行，中間不得插入 await 或 setTimeout。
+    // layer.js 的歷程對帳排在 microtask：同一輪內關掉選單又開新疊層時，對帳會看到
+    // 堆疊非空而不呼叫 history.back()，兩者沿用同一筆歷程紀錄。若這兩句被拆成非同步，
+    // 對帳就落在縫隙裡先 back() 了，新疊層隨後 pushState 便與 back() 在途交錯，
+    // 歷程位置比帳目少一格，下次關閉會多退一步而整個離開遊戲（2026-07-28 實測過的缺陷）。
     btn.addEventListener('click', () => { close(); fn(); });
     return btn;
   }

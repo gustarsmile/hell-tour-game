@@ -50,7 +50,9 @@ function onPopstate() {
   // 若下層仍開著，補推一筆讓返回鍵也能逐層關掉。本 app 目前無巢狀，
   // 但 artImg() 會自動為圖片掛上大圖疊層，日後只要有人在選單或善書冊裡放一張圖
   // 就會出現巢狀；少了這行，第二次按返回鍵會直接退出遊戲。
-  if (stack.length) pushEntry(win);
+  // !held 與上面 consuming 分支對稱：若某層的 onClose 同步開了新層，該層已自行推過一筆，
+  // 這裡再推就會讓同一個非空堆疊持有兩筆，返回鍵得按兩次。
+  if (stack.length && !held) pushEntry(win);
 }
 
 // 對帳延到 microtask 執行：close(); fn(); 這種同一輪內關舊層又開新層的路徑，
