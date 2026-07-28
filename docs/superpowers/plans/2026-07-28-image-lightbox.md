@@ -815,6 +815,7 @@ describe('漢堡選單接入 layer', () => {
 
   it('popstate 可關閉選單', () => {
     mountNav();
+    expect(menuOpen()).toBe(true);
     window.dispatchEvent(new window.PopStateEvent('popstate', { state: null }));
     expect(menuOpen()).toBe(false);
   });
@@ -844,6 +845,7 @@ describe('善書冊接入 layer', () => {
   it('popstate 可關閉善書冊', async () => {
     const cfg = await bootFlow();
     cfg.onBooklet();
+    expect(bookletOpen()).toBe(true);
     window.dispatchEvent(new window.PopStateEvent('popstate', { state: null }));
     expect(bookletOpen()).toBe(false);
   });
@@ -856,7 +858,7 @@ describe('善書冊接入 layer', () => {
     expect(bookletOpen()).toBe(false);
   });
 
-  it('經選單開啟善書冊後仍在畫面上（歷程對帳端到端）', async () => {
+  it('經選單開啟善書冊後仍在畫面上（menuAction 同輪關開端到端）', async () => {
     const cfg = await bootFlow();
     // 重現 nav.js 的 menuAction：close(); fn(); ——關選單與開善書冊在同一輪同步發生
     mountNav({ onBooklet: cfg.onBooklet });
@@ -872,7 +874,7 @@ describe('善書冊接入 layer', () => {
   it('單層不變式：堆疊深度不超過 1', async () => {
     const cfg = await bootFlow();
     cfg.onBooklet();
-    expect(layerDepth()).toBeLessThanOrEqual(1);
+    expect(layerDepth()).toBe(1);
   });
 });
 ```
